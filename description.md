@@ -18,3 +18,20 @@ demo
 # 代码/文档风格
 
 
+1 题目   ---> 1 image
+
+image ( linux --> python / jdk --> claude(LLM tool))
+
+
+
+
+
+----> origin  ------> pod
+
+10 person ------> 10 pod
+
+
+
+user a  -----> db get_user_history(a) ---> llm api
+
+user b  -----> db get_user_history(b) ---> llm api
