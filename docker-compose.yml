@@ -1,0 +1,6 @@
+services:
+  ai-coach:
+    build:
+      context: ./docker
+      dockerfile: Dockerfile
+    image: ai-coach-codesandbox:latest

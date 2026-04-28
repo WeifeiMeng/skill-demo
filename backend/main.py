@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from docker_manager import create_container, get_containers, stop_container, remove_container, start_container
+from middleware.database import get_db
+from route import auth, article, docker_container
 
 app = FastAPI()
 
@@ -12,23 +13,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.post("/create_env")
-def create_env():
-    result = create_container()
-    return result
+# 注册路由
+app.include_router(auth.router)
+app.include_router(article.router)
+app.include_router(docker_container.router)
 
-@app.get("/containers")
-def list_containers():
-    return get_containers()
 
-@app.post("/containers/{container_id}/stop")
-def stop_container_api(container_id: str):
-    return stop_container(container_id)
-
-@app.post("/containers/{container_id}/start")
-def start_container_api(container_id: str):
-    return start_container(container_id)
-
-@app.post("/containers/{container_id}/remove")
-def remove_container_api(container_id: str):
-    return remove_container(container_id)
+@app.get("/db/test")
+def test_db():
+    """测试数据库连接"""
+    try:
+        with get_db() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT 1")
+                result = cursor.fetchone()
+                return {"success": True, "result": result[0]}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

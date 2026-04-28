@@ -1,5 +1,8 @@
 FROM codercom/code-server:latest
 
+LABEL ai-coach="true" \
+      description="AI Coach 开发环境镜像"
+
 USER root
 
 # 安装 Python 3.12

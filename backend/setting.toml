@@ -1,0 +1,14 @@
+[database]
+host = "localhost"
+port = 3306
+user = "root"
+password = "123456"
+database = "skills_demo"
+charset = "utf8mb4"
+
+[docker]
+workspaces_base = "workspaces"
+default_image = "codesandbox-image-new:latest"
+
+[auth]
+secret = "your-secret-key-change-in-production"

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv sync:*)",
+      "Bash(taskkill /F /FI \"WINDOWTITLE eq *uvicorn*\")",
+      "Bash(taskkill /F /FI \"WINDOWTITLE eq *python*\")",
+      "Bash(uv pip:*)"
+    ]
+  }
+}

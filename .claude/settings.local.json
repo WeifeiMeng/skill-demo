@@ -3,7 +3,8 @@
     "allow": [
       "Bash(wc -l deep-face-search/*)",
       "Bash(\"d:/code/stock-n/backend/.venv/Scripts/python.exe\" deep_face_search.py --demo)",
-      "Bash(/d/code/skills-demo/.venv/Scripts/python.exe deep_face_search.py --demo)"
+      "Bash(/d/code/skills-demo/.venv/Scripts/python.exe deep_face_search.py --demo)",
+      "Bash(uvicorn main:app --port 8000)"
     ]
   }
 }

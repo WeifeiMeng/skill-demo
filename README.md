@@ -20,7 +20,8 @@ npm run dev
 ### 后端
 ```bash
 cd backend
-uvicorn main:app --reload --port 8000
+uv sync
+uvicorn main:app --port 8000
 ```
 
 ## 使用方法
