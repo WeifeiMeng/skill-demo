@@ -60,10 +60,13 @@
 <script setup>
 import { ref } from 'vue'
 
+const props = defineProps({
+  initialMode: { type: String, default: 'login' }
+})
 const emit = defineEmits(['login', 'close'])
 const API_BASE = 'http://localhost:8000'
 
-const isRegister = ref(false)
+const isRegister = ref(props.initialMode === 'register')
 const loading = ref(false)
 const error = ref('')
 const form = ref({ name: '', email: '', password: '' })

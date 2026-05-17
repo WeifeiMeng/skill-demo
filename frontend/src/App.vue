@@ -49,6 +49,7 @@
     <!-- Auth Modal -->
     <AuthModal
       v-if="showAuthModal"
+      :initialMode="showAuthModal"
       @login="handleLogin"
       @close="showAuthModal = null"
     />
@@ -79,7 +80,6 @@ const API_BASE = 'http://localhost:8000'
 // Auth state
 const loggedIn = ref(false)
 const username = ref('')
-const token = ref('')
 
 // Articles
 const articles = ref([])
@@ -102,17 +102,11 @@ const logout = () => {
   localStorage.removeItem('user')
   loggedIn.value = false
   username.value = ''
-  token.value = ''
 }
 
 const goHome = () => {
   currentExam.value = null
   selectedArticle.value = null
-}
-
-const getHeaders = () => {
-  const t = localStorage.getItem('token')
-  return t ? { 'Authorization': `Bearer ${t}` } : {}
 }
 
 const loadArticles = async () => {
@@ -150,7 +144,6 @@ onMounted(async () => {
   const savedToken = localStorage.getItem('token')
   const savedUser = localStorage.getItem('user')
   if (savedToken && savedUser) {
-    token.value = savedToken
     const user = JSON.parse(savedUser)
     username.value = user.name
     loggedIn.value = true

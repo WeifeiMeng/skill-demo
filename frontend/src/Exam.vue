@@ -183,7 +183,7 @@ onUnmounted(() => {
 }
 
 .exam-timer.warn {
-  color: #e94560;
+  color: #ef4444;
   animation: pulse 1s ease-in-out infinite;
 }
 
