@@ -105,7 +105,7 @@ onUnmounted(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #1a1a2e;
+  background: #f8fafc;
 }
 
 /* Loading */
@@ -115,15 +115,16 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
+  background: #f8fafc;
 }
 
 .spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #0f3460;
-  border-top-color: #e94560;
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #4a6cf7;
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 0.7s linear infinite;
 }
 
 @keyframes spin {
@@ -131,9 +132,9 @@ onUnmounted(() => {
 }
 
 .loading-text {
-  color: #fff;
-  margin-top: 20px;
-  font-size: 16px;
+  color: #64748b;
+  margin-top: 16px;
+  font-size: 14px;
 }
 
 /* Topbar */
@@ -141,38 +142,38 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 0 20px;
-  height: 56px;
-  background: #16213e;
-  border-bottom: 1px solid #0f3460;
+  padding: 0 28px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
 }
 
 .exam-title {
-  color: #fff;
-  font-weight: bold;
-  font-size: 16px;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 15px;
   margin-right: auto;
 }
 
 .back-btn {
-  padding: 6px 14px;
-  background: #0f3460;
-  color: #a0a0a0;
+  padding: 6px 16px;
+  background: #f1f5f9;
+  color: #64748b;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 13px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
 }
-
 .back-btn:hover {
-  background: #1a4a7a;
-  color: #fff;
+  background: #e2e8f0;
+  color: #475569;
 }
 
 .exam-timer {
-  color: #4ecca3;
+  color: #4a6cf7;
   font-size: 24px;
   font-weight: bold;
   font-variant-numeric: tabular-nums;
@@ -191,19 +192,17 @@ onUnmounted(() => {
 }
 
 .finish-btn {
-  padding: 8px 20px;
-  background: #e94560;
+  padding: 8px 22px;
+  background: linear-gradient(135deg, #4a6cf7, #6a3de8);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
 }
-
 .finish-btn:hover {
-  background: #c73650;
+  opacity: 0.9;
 }
 
 /* Iframe */
