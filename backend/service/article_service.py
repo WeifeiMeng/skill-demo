@@ -8,6 +8,12 @@ NAME_MAP = {
     "advanced-face-search.md": "高性能短链接",
 }
 
+# 文件名到简介的映射
+DESCRIPTION_MAP = {
+    "deep-face-search.md": "给定一张模糊的人脸图片，通过多轮搜索与用户反馈确认，最终定位到具体人员档案。考察函数调用策略、搜索流程设计与 Top1 限制的解决方案。",
+    "advanced-short-url.md": "用 Python 实现一个高性能短链接后端服务，支持长 URL 转短码、302 重定向跳转，以及基于滑动窗口算法的用户级限流。",
+}
+
 
 def _extract_title_from_md(filepath: str) -> str | None:
     """从 markdown 的第一个 # 一级标题提取中文名"""
@@ -51,6 +57,7 @@ def list_articles():
         result.append({
             "filename": fname,
             "title": title,
+            "description": DESCRIPTION_MAP.get(fname, ""),
         })
 
     return result
