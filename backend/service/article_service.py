@@ -5,7 +5,7 @@ ARTICLES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "article
 # 文件名到中文题目的映射
 NAME_MAP = {
     "deep-face-search.md": "深度人脸搜索",
-    "advanced-face-search.md": "高性能短链接",
+    "advanced-short-url.md": "高性能短链接",
 }
 
 # 文件名到简介的映射
