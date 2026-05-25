@@ -6,7 +6,12 @@ LABEL ai-coach="true" \
 USER root
 
 # 安装 Python 3.12
-RUN apt-get update && apt-get install -y python3 python3-pip
+# RUN apt-get update && apt-get install -y python3 python3-pip
+RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
+    sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
+    apt-get update --fix-missing && \
+    apt-get install -y python3 python3-pip curl && \
+    apt-get clean
 
 # 安装 Node.js 22.14.0
 RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \

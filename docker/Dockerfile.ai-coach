@@ -1,0 +1,23 @@
+FROM ai-coach:0.1
+
+LABEL description="AI Coach with claudecode and basic networking tools"
+
+USER root
+
+# 安装常用网络诊断和系统工具
+RUN apt-get update && apt-get install -y \
+    iputils-ping \
+    net-tools \
+    curl \
+    wget \
+    dnsutils \
+    telnet \
+    vim \
+    && apt-get clean
+
+# 全局安装 Claude Code CLI
+RUN npm install -g @anthropic-ai/claude-code
+
+USER coder
+
+CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "none"]
