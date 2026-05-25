@@ -72,14 +72,23 @@ def create_container(username: str, image: str, article_name: str | None = None)
     # 复制对应的 markdown 题目到工作目录
     if article_name:
         articles_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "articles")
-        md_file = os.path.join(articles_dir, f"{article_name}.md")
-        if os.path.exists(md_file):
-            shutil.copy2(md_file, workspace_dir)
+        article_dir = os.path.join(articles_dir, article_name)
+        if os.path.isdir(article_dir):
+            shutil.copytree(article_dir, workspace_dir, dirs_exist_ok=True)
 
     labels = {}
     if article_name:
         labels["user"] = username
         labels["article"] = article_name
+
+    # 从宿主环境透传 AI 相关环境变量到容器
+    ai_env = {
+        k: v for k, v in {
+            "ANTHROPIC_BASE_URL": os.environ.get("ANTHROPIC_BASE_URL"),
+            "ANTHROPIC_API_KEY": os.environ.get("ANTHROPIC_API_KEY"),
+            "ANTHROPIC_MODEL": os.environ.get("ANTHROPIC_MODEL"),
+        }.items() if v is not None
+    }
 
     container = _get_client().containers.run(
         image,
@@ -89,8 +98,19 @@ def create_container(username: str, image: str, article_name: str | None = None)
         name=env_name,
         volumes={workspace_dir: {"bind": "/workspace", "mode": "rw"}},
         working_dir="/workspace",
-        labels=labels
+        labels=labels,
+        environment=ai_env,
+        extra_hosts={"host.docker.internal": "host-gateway"}
     )
+
+    # 将 ANTHROPIC 环境变量写入容器 ~/.bashrc，方便用户终端使用
+    if ai_env:
+        lines = "".join(f'export {k}="{v}"\n' for k, v in ai_env.items())
+        cmd = ["bash", "-c", f"cat >> ~/.bashrc <<'ENVEOF'\n{lines}ENVEOF"]
+        try:
+            container.exec_run(cmd, user="root")
+        except Exception as e:
+            print(f"Warning: failed to write env to .bashrc: {e}")
 
     return {
         "container_id": container.id,
