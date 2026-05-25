@@ -4,7 +4,27 @@
       "Bash(wc -l deep-face-search/*)",
       "Bash(\"d:/code/stock-n/backend/.venv/Scripts/python.exe\" deep_face_search.py --demo)",
       "Bash(/d/code/skills-demo/.venv/Scripts/python.exe deep_face_search.py --demo)",
-      "Bash(uvicorn main:app --port 8000)"
+      "Bash(uvicorn main:app --port 8000)",
+      "Bash(/c/Users/Vic/.claude/plugins/cache/claude-plugins-official/superpowers/5.1.0/skills/brainstorming/scripts/start-server.sh --project-dir /d/code/skills-demo)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(timeout 5 uvicorn main:app --reload --port 8000)",
+      "Bash(ls /d/code/skills-demo/backend/.venv/Scripts/uvicorn*)",
+      "Bash(ls /d/code/skills-demo/backend/.venv/bin/uvicorn*)",
+      "Bash(taskkill /f /im uvicorn.exe)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /f /im python.exe)",
+      "Bash(taskkill /f /pid 23056)",
+      "Bash(npm run:*)",
+      "Bash(node node_modules/vite/bin/vite.js build)",
+      "Bash(uv sync:*)",
+      "Bash(npm install:*)",
+      "Bash(npx vite:*)",
+      "Bash(python -c \":*)",
+      "Bash(mkdir -p \"D:/code/skills-demo/backend/articles/advanced-short-url\" \"D:/code/skills-demo/backend/articles/deep-face-search\")",
+      "Bash(mv \"D:/code/skills-demo/backend/articles/advanced-short-url.md\" \"D:/code/skills-demo/backend/articles/advanced-short-url/readme.md\")",
+      "Bash(mv \"D:/code/skills-demo/backend/articles/deep-face-search.md\" \"D:/code/skills-demo/backend/articles/deep-face-search/readme.md\")",
+      "Bash(git:*)"
     ]
   }
 }

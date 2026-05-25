@@ -1,0 +1,124 @@
+<h2>登录 / 注册 & 权限拦截</h2>
+<p class="subtitle">点击「进入考试」时拦截 + 登录注册弹窗</p>
+
+<div style="display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;">
+
+  <!-- 场景1：未登录点击进入考试 -->
+  <div class="mockup" style="flex: 0 0 420px; position: relative; overflow: hidden;">
+    <div class="mockup-header">未登录点击「进入考试」</div>
+    <div class="mockup-body" style="padding: 20px; min-height: 300px; position: relative;">
+
+      <!-- 模拟背景（变暗） -->
+      <div style="opacity: 0.3; filter: blur(2px);">
+        <div style="height: 20px; background: #ddd; border-radius: 4px; width: 60%; margin-bottom: 16px;"></div>
+        <div style="height: 100px; background: #ddd; border-radius: 8px; margin-bottom: 12px;"></div>
+      </div>
+
+      <!-- 拦截弹窗 -->
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-radius: 20px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.12); border: 1px solid rgba(255,255,255,0.6); text-align: center;">
+        <div style="font-size: 40px; margin-bottom: 12px;">🔐</div>
+        <h3 style="margin: 0 0 6px; font-size: 18px; color: #1e293b;">需要登录</h3>
+        <p style="margin: 0 0 20px; font-size: 13px; color: #64748b; line-height: 1.5;">
+          请先登录或注册账号后再开始考试
+        </p>
+        <button class="mock-button" style="width: 100%; padding: 11px; background: linear-gradient(135deg, #4a6cf7, #6a3de8); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; margin-bottom: 8px;">去登录</button>
+        <button class="mock-button" style="width: 100%; padding: 11px; background: transparent; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 14px; color: #64748b;">取消</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 场景2：登录弹窗 -->
+  <div class="mockup" style="flex: 0 0 420px; position: relative; overflow: hidden;">
+    <div class="mockup-header">登录弹窗</div>
+    <div class="mockup-body" style="padding: 20px; min-height: 300px; position: relative;">
+
+      <!-- 模拟背景（变暗） -->
+      <div style="opacity: 0.3; filter: blur(2px);">
+        <div style="height: 20px; background: #ddd; border-radius: 4px; width: 60%; margin-bottom: 16px;"></div>
+        <div style="height: 100px; background: #ddd; border-radius: 8px; margin-bottom: 12px;"></div>
+      </div>
+
+      <!-- 登录弹窗 -->
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 340px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-radius: 20px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.12); border: 1px solid rgba(255,255,255,0.6);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h3 style="margin: 0; font-size: 20px; color: #1e293b;">登录</h3>
+          <span style="font-size: 18px; cursor: pointer; color: #94a3b8;">✕</span>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">邮箱</label>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; color: #94a3b8;">请输入邮箱</div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">密码</label>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; color: #94a3b8;">请输入密码</div>
+        </div>
+
+        <button class="mock-button" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #4a6cf7, #6a3de8); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600;">登录</button>
+
+        <p style="text-align: center; font-size: 13px; color: #64748b; margin: 16px 0 0;">
+          还没有账号？<span style="color: #4a6cf7; cursor: pointer; font-weight: 500;">去注册</span>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 场景3：注册弹窗 -->
+  <div class="mockup" style="flex: 0 0 420px; position: relative; overflow: hidden;">
+    <div class="mockup-header">注册弹窗</div>
+    <div class="mockup-body" style="padding: 20px; min-height: 330px; position: relative;">
+
+      <!-- 模拟背景（变暗） -->
+      <div style="opacity: 0.3; filter: blur(2px);">
+        <div style="height: 20px; background: #ddd; border-radius: 4px; width: 60%; margin-bottom: 16px;"></div>
+        <div style="height: 100px; background: #ddd; border-radius: 8px; margin-bottom: 12px;"></div>
+      </div>
+
+      <!-- 注册弹窗 -->
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 340px; background: rgba(255,255,255,0.92); backdrop-filter: blur(20px); border-radius: 20px; padding: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.12); border: 1px solid rgba(255,255,255,0.6);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h3 style="margin: 0; font-size: 20px; color: #1e293b;">注册</h3>
+          <span style="font-size: 18px; cursor: pointer; color: #94a3b8;">✕</span>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">姓名</label>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; color: #94a3b8;">请输入姓名</div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+          <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">邮箱</label>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; color: #94a3b8;">请输入邮箱</div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-size: 13px; font-weight: 500; color: #475569; margin-bottom: 6px;">密码</label>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 14px; font-size: 14px; color: #94a3b8;">请输入密码</div>
+        </div>
+
+        <button class="mock-button" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #4a6cf7, #6a3de8); color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 600;">注册</button>
+
+        <p style="text-align: center; font-size: 13px; color: #64748b; margin: 16px 0 0;">
+          已有账号？<span style="color: #4a6cf7; cursor: pointer; font-weight: 500;">去登录</span>
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="section">
+  <h3>认证交互流程</h3>
+  <ul>
+    <li><strong>场景1：未登录 → 点击「进入考试」</strong> → 弹出拦截提示，引导登录</li>
+    <li><strong>场景2：导航栏点击「登录」</strong> → 弹出登录弹窗，输入邮箱+密码</li>
+    <li><strong>场景3：登录页切换「去注册」</strong> → 切换到注册弹窗（姓名+邮箱+密码）</li>
+    <li><strong>登录/注册成功后</strong> → 弹窗关闭，导航栏切换为显示用户信息</li>
+  </ul>
+</div>
+
+<p class="subtitle" style="text-align:center; margin-top: 20px;">认证流程这样设计是否符合你的预期？</p>
