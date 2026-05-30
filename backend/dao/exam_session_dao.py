@@ -59,11 +59,16 @@ class ExamSessionDao:
 
     @staticmethod
     def create(user_id: int, article_name: str, container_id: str) -> ExamSession:
-        """创建新的考试会话"""
+        """创建新的考试会话（如已有历史记录则重置为活跃）"""
         now = datetime.now()
         sql = """
             INSERT INTO exam_sessions (user_id, article_name, container_id, started_at, status)
             VALUES (%s, %s, %s, %s, 'active')
+            ON DUPLICATE KEY UPDATE
+                container_id = VALUES(container_id),
+                started_at = VALUES(started_at),
+                status = 'active',
+                ended_at = NULL
         """
         with get_db() as conn:
             with conn.cursor() as cursor:
@@ -92,6 +97,7 @@ class ExamSessionDao:
                         conn.commit()
                 existing.container_id = container_id
             return existing
+        # ON DUPLICATE KEY UPDATE 自动处理历史 finished 记录
         return ExamSessionDao.create(user_id, article_name, container_id)
 
     @staticmethod

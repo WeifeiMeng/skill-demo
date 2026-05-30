@@ -260,15 +260,20 @@ vibe-coding-challenge/
 │   ├── odps_client.py                 # Mock ODPS SDK（已提供）
 │   └── generate_test_data.py          # 测试数据生成器（已提供）
 ├── data/                              # 模拟数据存储目录（运行时生成）
-├── src/                               # 你的实现代码（目录名和结构自行设计）
-└── output/                            # 输出目录
+└── output/                            # 输出目录（你的代码生成）
+    ├── raw/                           #   原始数据 CSV
+    ├── parsed/                        #   解析后结构化 CSV
+    ├── quota/                         #   配额结果 CSV
+    └── fallback/                      #   降级交付文件
 ```
 
-> **说明**：`src/` 仅为示意，你可以自由选择代码组织方式。如何划分模块、命名文件和函数，是工程化能力的考核内容。
+> **说明**：`mock_odps/` 和 `data/` 已预先提供，请勿修改。`output/` 由你的代码生成。
 
 ---
 
 ## 七、运行方式
+
+### 7.1 本地运行
 
 ```bash
 # 1. 安装依赖
@@ -277,20 +282,93 @@ pip install -r requirements.txt
 # 2. 生成测试数据
 python mock_odps/generate_test_data.py --ds 20260501 --products 200 --seed 42
 
-# 3. 运行你的 pipeline（入口文件由你自行设计）
-python <你的主入口> --ds 20260501
+# 3. 运行你的 pipeline
+python run_pipeline.py --ds 20260501
 ```
+
+### 7.2 在线提交测试
+
+在考试页面中，点击顶部 **"提交测试"** 按钮。系统会在你的容器中执行自动化测试脚本，验证以下内容：
+
+| 检查项 | 说明 |
+|--------|------|
+| Pipeline 可运行 | `run_pipeline.py --ds 20260501` 正常退出 |
+| 输出文件完整性 | `output/raw/`, `output/parsed/`, `output/quota/`, `output/fallback/` 均有文件产出 |
+| 解析正确性 | CSV 列数 >= 20，数值字段类型转换正确 |
+| 求解器约束 | 总预算、单商品/单商家/商品数/类目数上限 |
+| 文档完整性 | `review_report.md` 和 `design_notes.md` 存在 |
+
+点击后会弹出评测结果面板，展示每项得分和通过/失败详情。
 
 ---
 
-## 八、提交要求
+## 八、提交产物清单
 
-请提交以下内容：
+你需要确保以下 **5 项产物** 全部就绪后再点击"提交测试"：
 
-1. 完整的 pipeline 实现代码（代码结构自行设计）
-2. `review_report.md` — 代码 review 报告
-3. `design_notes.md` — 设计决策文档（目标函数权重推导、约束阈值依据、异常处理策略、降级方案设计）
-4. 至少一次成功运行的配额结果 CSV
+### 8.1 入口文件（必须）
+
+```
+run_pipeline.py          # 主入口，必须放在 workspace 根目录
+```
+
+**命令行接口约定**：
+```bash
+python run_pipeline.py --ds YYYYMMDD
+```
+- `--ds`：指定分区日期，格式 `YYYYMMDD`（如 `20260501`）
+- 入口文件名**必须**是 `run_pipeline.py`，不能是其他名称
+- 启动后应依次执行 数据获取 → 数据解析 → 配额求解 → 结果入库，完成全流程
+
+### 8.2 输出文件（必须）
+
+你的 pipeline 运行后必须在以下路径产生文件：
+
+```
+output/
+├── raw/          # 从 ODPS 获取的原始数据 CSV（如 20260501_新品数据(未解析).csv）
+├── parsed/       # 解析后的结构化 CSV（如 20260501_新品数据(已解析).csv）
+├── quota/        # 配额分配结果 CSV（如 20260501_新品配额.csv）
+└── fallback/     # 降级交付清单 + 本地保存的配额 CSV
+```
+
+> 输出目录名和文件名可自行命名，但**四个目录必须存在且包含对应文件**。
+
+### 8.3 文档（必须）
+
+```
+review_report.md         # 代码 review 报告（前置任务，阅读 review_reference.py 后撰写）
+design_notes.md          # 设计决策文档
+```
+
+**review_report.md 内容**：阅读 `review_reference.py`，找出至少 3 处设计缺陷或潜在 bug，说明问题、影响、改进建议。
+
+**design_notes.md 内容**：
+1. 目标函数设计：为什么选择这个目标函数？权重如何确定？
+2. 约束条件设计：各项阈值的设定依据
+3. 异常处理策略：发现了哪些数据异常？如何处理？
+4. 降级方案设计：ODPS 写入失败时的交付流程
+
+### 8.4 代码模块（你自行设计）
+
+除入口文件外，其他代码模块可自由组织。建议拆分为：
+
+- 数据获取模块（调用 Mock ODPS）
+- 数据解析模块（解压 big_chunk_string）
+- 配额求解模块（MIP 建模）
+- 结果入库模块（ODPS 写入 + 降级）
+
+模块名、文件名、函数名自定，不影响测试结果。
+
+### 8.5 产物清单速查
+
+| # | 产物 | 必须？ | 约定 |
+|---|------|--------|------|
+| 1 | `run_pipeline.py` | 是 | 入口文件，接受 `--ds` 参数 |
+| 2 | `output/` 目录 | 是 | 含 raw/parsed/quota/fallback 四个子目录 |
+| 3 | `review_report.md` | 是 | 代码 review 报告 |
+| 4 | `design_notes.md` | 是 | 设计决策文档 |
+| 5 | 其他代码模块 | 自由 | 自行组织结构
 
 ---
 

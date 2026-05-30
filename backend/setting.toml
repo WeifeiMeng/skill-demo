@@ -8,7 +8,7 @@ charset = "utf8mb4"
 
 [docker]
 workspaces_base = "workspaces"
-default_image = "ai-coach:1.0"在
+default_image = "ai-coach:1.0"
 
 [auth]
 secret = "your-secret-key-change-in-production"

@@ -2,16 +2,11 @@ import os
 
 ARTICLES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "articles")
 
-# 文件名到中文题目的映射
+# 文件名到中文题目的映射（手动覆盖 markdown 标题）
 NAME_MAP = {
     "deep-face-search": "深度人脸搜索",
     "advanced-short-url": "高性能短链接",
-}
-
-# 文件名到简介的映射
-DESCRIPTION_MAP = {
-    "deep-face-search": "给定一张模糊的人脸图片，通过多轮搜索与用户反馈确认，最终定位到具体人员档案。考察函数调用策略、搜索流程设计与 Top1 限制的解决方案。",
-    "advanced-short-url": "用 Python 实现一个高性能短链接后端服务，支持长 URL 转短码、302 重定向跳转，以及基于滑动窗口算法的用户级限流。",
+    "vibe-coding-challenge": "Vibe Coding: 新品冷启动流量配额系统",
 }
 
 
@@ -28,9 +23,17 @@ def _extract_title_from_md(filepath: str) -> str | None:
     return None
 
 
+def _read_readme(filepath: str) -> str:
+    """读取 readme.md 全部内容"""
+    try:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception:
+        return ""
+
+
 def _default_title(filename: str) -> str:
     """文件名转可读标题"""
-    # 驼峰/中划线 → 空格分隔 + 首字母大写
     return filename.replace("-", " ").replace("_", " ").title()
 
 
@@ -44,23 +47,21 @@ def list_articles():
         dirpath = os.path.join(ARTICLES_DIR, fname)
         if not os.path.isdir(dirpath):
             continue
-        readme = os.path.join(dirpath, "readme.md")
-        if not os.path.exists(readme):
+        readme_file = os.path.join(dirpath, "readme.md")
+        if not os.path.exists(readme_file):
             continue
-
-        filepath = readme
 
         # 优先用映射表，其次从 markdown 标题提取，最后用文件名
         title = NAME_MAP.get(fname)
         if not title:
-            title = _extract_title_from_md(filepath)
+            title = _extract_title_from_md(readme_file)
         if not title:
             title = _default_title(fname)
 
         result.append({
             "filename": fname,
             "title": title,
-            "description": DESCRIPTION_MAP.get(fname, ""),
+            "description": _read_readme(readme_file),
         })
 
     return result

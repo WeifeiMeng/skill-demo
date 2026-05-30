@@ -214,3 +214,47 @@ def get_images():
     except Exception as e:
         print(f"Error getting images: {e}")
     return result
+
+
+def exec_test(container_id: str, article_name: str):
+    """在容器中执行测试脚本，返回 JSON 结果"""
+    import base64
+    import json as json_mod
+
+    tests_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tests")
+    test_file = os.path.join(tests_dir, article_name, "test.py")
+
+    if not os.path.exists(test_file):
+        return {"error": f"Test not found for article: {article_name}"}
+
+    try:
+        with open(test_file, "r", encoding="utf-8") as f:
+            test_code = f.read()
+    except Exception as e:
+        return {"error": f"Failed to read test file: {e}"}
+
+    # Base64 编码后通过 exec_run 注入容器执行
+    b64 = base64.b64encode(test_code.encode("utf-8")).decode("ascii")
+    cmd = f'python3 -c "import base64; exec(base64.b64decode(\'{b64}\'))"'
+
+    try:
+        container = _get_client().containers.get(container_id)
+        result = container.exec_run(cmd, user="root")
+    except docker.errors.NotFound:
+        return {"error": "Container not found"}
+    except Exception as e:
+        return {"error": f"Exec failed: {e}"}
+
+    output = result.output.decode("utf-8", errors="replace") if isinstance(result.output, bytes) else str(result.output)
+
+    # 从 stdout 中提取最后一段 JSON
+    try:
+        # 找到最后一个完整 JSON 对象
+        lines = output.strip().split("\n")
+        for line in reversed(lines):
+            line = line.strip()
+            if line.startswith("{") and line.endswith("}"):
+                return json_mod.loads(line)
+        return {"error": "No JSON result found in test output", "raw": output[-1000:]}
+    except json_mod.JSONDecodeError as e:
+        return {"error": f"JSON parse error: {e}", "raw": output[-1000:]}

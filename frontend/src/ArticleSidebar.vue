@@ -17,7 +17,7 @@
       <div class="sidebar-body">
         <div class="sidebar-section">
           <div class="section-label">题目简介</div>
-          <p class="section-text">{{ article.description }}</p>
+          <div class="section-text markdown-body" v-html="renderedDescription"></div>
         </div>
       </div>
 
@@ -34,6 +34,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { marked } from 'marked'
 
 const props = defineProps({
   article: { type: Object, required: true }
@@ -41,17 +42,20 @@ const props = defineProps({
 defineEmits(['close', 'enter-exam'])
 
 const ICON_MAP = {
-  'deep-face-search.md': '🔍',
-  'advanced-short-url.md': '🔗'
+  'deep-face-search': '🔍',
+  'advanced-short-url': '🔗',
+  'vibe-coding-challenge': '⚙️'
 }
 
 const TAG_MAP = {
-  'deep-face-search.md': 'AI · 算法',
-  'advanced-short-url.md': '后端 · 系统设计'
+  'deep-face-search': 'AI · 算法',
+  'advanced-short-url': '后端 · 系统设计',
+  'vibe-coding-challenge': '数据 · 运筹优化'
 }
 
 const icon = computed(() => ICON_MAP[props.article.filename] || '📄')
 const tag = computed(() => TAG_MAP[props.article.filename] || '')
+const renderedDescription = computed(() => marked(props.article.description || ''))
 </script>
 
 <style scoped>
@@ -166,11 +170,30 @@ const tag = computed(() => TAG_MAP[props.article.filename] || '')
 }
 
 .section-text {
-  font-size: 14px;
+  font-size: 13px;
   color: #334155;
   line-height: 1.8;
-  margin: 0;
 }
+
+/* Markdown rendered styles */
+.markdown-body :deep(h1) { font-size: 18px; font-weight: 700; color: #1e293b; margin: 0 0 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+.markdown-body :deep(h2) { font-size: 15px; font-weight: 700; color: #1e293b; margin: 20px 0 8px; }
+.markdown-body :deep(h3) { font-size: 14px; font-weight: 600; color: #334155; margin: 14px 0 6px; }
+.markdown-body :deep(h4) { font-size: 13px; font-weight: 600; color: #475569; margin: 10px 0 4px; }
+.markdown-body :deep(p) { margin: 0 0 8px; }
+.markdown-body :deep(ul), .markdown-body :deep(ol) { margin: 4px 0 8px; padding-left: 20px; }
+.markdown-body :deep(li) { margin-bottom: 2px; }
+.markdown-body :deep(code) { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; font-size: 12px; color: #e11d48; }
+.markdown-body :deep(pre) { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; overflow-x: auto; font-size: 12px; line-height: 1.5; margin: 8px 0; }
+.markdown-body :deep(pre code) { background: none; padding: 0; color: #334155; }
+.markdown-body :deep(table) { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0; }
+.markdown-body :deep(th), .markdown-body :deep(td) { border: 1px solid #e2e8f0; padding: 6px 10px; text-align: left; }
+.markdown-body :deep(th) { background: #f8fafc; font-weight: 600; color: #475569; }
+.markdown-body :deep(blockquote) { border-left: 3px solid #4a6cf7; padding: 4px 12px; margin: 8px 0; color: #64748b; background: #f8fafc; border-radius: 0 6px 6px 0; }
+.markdown-body :deep(hr) { border: none; border-top: 1px solid #e2e8f0; margin: 12px 0; }
+.markdown-body :deep(a) { color: #4a6cf7; }
+.markdown-body :deep(strong) { font-weight: 600; color: #1e293b; }
+.markdown-body :deep(img) { max-width: 100%; }
 
 .sidebar-footer {
   padding: 20px 28px;

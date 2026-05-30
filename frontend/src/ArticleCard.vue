@@ -16,13 +16,15 @@ const props = defineProps({
 defineEmits(['select'])
 
 const ICON_MAP = {
-  'deep-face-search.md': '🔍',
-  'advanced-short-url.md': '🔗'
+  'deep-face-search': '🔍',
+  'advanced-short-url': '🔗',
+  'vibe-coding-challenge': '⚙️'
 }
 
 const TAG_MAP = {
-  'deep-face-search.md': 'AI · 算法',
-  'advanced-short-url.md': '后端 · 系统设计'
+  'deep-face-search': 'AI · 算法',
+  'advanced-short-url': '后端 · 系统设计',
+  'vibe-coding-challenge': '数据 · 运筹优化'
 }
 
 const icon = computed(() => ICON_MAP[props.article.filename] || '📄')
