@@ -123,7 +123,7 @@ class ExamResultDao:
         """获取所有用户的考试统计数据"""
         sql = """
             SELECT u.id, u.name, u.email, er.article_name,
-                   MAX(er.score) as best_score, er.max_score,
+                   MAX(er.score) as best_score, MAX(er.max_score) as max_score,
                    MAX(er.passed) as ever_passed, COUNT(*) as submission_count,
                    MAX(er.submitted_at) as last_submitted
             FROM users u
