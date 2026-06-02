@@ -10,6 +10,7 @@ class User:
     name: str = ""
     email: str = ""
     password: str = ""
+    role: str = "user"          # "user" | "admin"
     avatar: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None

@@ -16,6 +16,7 @@ class UserDao:
                 name VARCHAR(100) NOT NULL,
                 email VARCHAR(255) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
+                role VARCHAR(20) DEFAULT 'user',
                 avatar VARCHAR(500),
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -26,12 +27,21 @@ class UserDao:
                 cursor.execute(sql)
                 conn.commit()
 
+        # Migration: add role column for existing databases
+        try:
+            with get_db() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute("ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user' AFTER password")
+                    conn.commit()
+        except Exception:
+            pass
+
     @staticmethod
     def create(user: User) -> int:
         """创建用户，返回新用户ID"""
         sql = """
-            INSERT INTO users (name, email, password, avatar, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO users (name, email, password, role, avatar, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         now = datetime.now()
         with get_db() as conn:
@@ -40,6 +50,7 @@ class UserDao:
                     user.name,
                     user.email,
                     user.password,
+                    user.role,
                     user.avatar,
                     now,
                     now
@@ -50,7 +61,7 @@ class UserDao:
     @staticmethod
     def get_by_id(user_id: int) -> Optional[User]:
         """根据ID获取用户"""
-        sql = "SELECT id, name, email, password, avatar, created_at, updated_at FROM users WHERE id = %s"
+        sql = "SELECT id, name, email, password, role, avatar, created_at, updated_at FROM users WHERE id = %s"
         with get_db() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(sql, (user_id,))
@@ -61,16 +72,17 @@ class UserDao:
                         name=row[1],
                         email=row[2],
                         password=row[3],
-                        avatar=row[4],
-                        created_at=row[5],
-                        updated_at=row[6]
+                        role=row[4],
+                        avatar=row[5],
+                        created_at=row[6],
+                        updated_at=row[7]
                     )
                 return None
 
     @staticmethod
     def get_by_email(email: str) -> Optional[User]:
         """根据邮箱获取用户"""
-        sql = "SELECT id, name, email, password, avatar, created_at, updated_at FROM users WHERE email = %s"
+        sql = "SELECT id, name, email, password, role, avatar, created_at, updated_at FROM users WHERE email = %s"
         with get_db() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(sql, (email,))
@@ -81,16 +93,17 @@ class UserDao:
                         name=row[1],
                         email=row[2],
                         password=row[3],
-                        avatar=row[4],
-                        created_at=row[5],
-                        updated_at=row[6]
+                        role=row[4],
+                        avatar=row[5],
+                        created_at=row[6],
+                        updated_at=row[7]
                     )
                 return None
 
     @staticmethod
     def get_all() -> List[User]:
         """获取所有用户"""
-        sql = "SELECT id, name, email, password, avatar, created_at, updated_at FROM users"
+        sql = "SELECT id, name, email, password, role, avatar, created_at, updated_at FROM users"
         with get_db() as conn:
             with conn.cursor() as cursor:
                 cursor.execute(sql)
@@ -101,9 +114,10 @@ class UserDao:
                         name=row[1],
                         email=row[2],
                         password=row[3],
-                        avatar=row[4],
-                        created_at=row[5],
-                        updated_at=row[6]
+                        role=row[4],
+                        avatar=row[5],
+                        created_at=row[6],
+                        updated_at=row[7]
                     )
                     for row in rows
                 ]
@@ -113,7 +127,7 @@ class UserDao:
         """更新用户信息"""
         sql = """
             UPDATE users
-            SET name = %s, email = %s, password = %s, avatar = %s, updated_at = %s
+            SET name = %s, email = %s, password = %s, role = %s, avatar = %s, updated_at = %s
             WHERE id = %s
         """
         now = datetime.now()
@@ -123,6 +137,7 @@ class UserDao:
                     user.name,
                     user.email,
                     user.password,
+                    user.role,
                     user.avatar,
                     now,
                     user.id
