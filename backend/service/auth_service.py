@@ -25,12 +25,13 @@ def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_token(user_id: int, email: str) -> str:
+def create_token(user_id: int, email: str, role: str = "user") -> str:
     """创建 JWT token"""
     expire = datetime.utcnow() + timedelta(minutes=JWT_EXPIRE_MINUTES)
     payload = {
         "sub": str(user_id),
         "email": email,
+        "role": role,
         "exp": expire
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)

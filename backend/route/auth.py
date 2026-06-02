@@ -32,7 +32,7 @@ def register(req: RegisterRequest):
     )
     user.id = UserDao.create(user)
 
-    token = create_token(user.id, user.email)
+    token = create_token(user.id, user.email, user.role or "user")
     return {
         "success": True,
         "token": token,
@@ -40,6 +40,7 @@ def register(req: RegisterRequest):
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "role": user.role or "user",
             "avatar": user.avatar
         }
     }
@@ -52,7 +53,7 @@ def login(req: LoginRequest):
     if not user or not verify_password(req.password, user.password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    token = create_token(user.id, user.email)
+    token = create_token(user.id, user.email, user.role or "user")
     return {
         "success": True,
         "token": token,
@@ -60,6 +61,7 @@ def login(req: LoginRequest):
             "id": user.id,
             "name": user.name,
             "email": user.email,
+            "role": user.role or "user",
             "avatar": user.avatar
         }
     }
@@ -72,5 +74,6 @@ def get_me(user: User = Depends(get_current_user)):
         "id": user.id,
         "name": user.name,
         "email": user.email,
+        "role": user.role or "user",
         "avatar": user.avatar
     }
