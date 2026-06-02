@@ -5,7 +5,10 @@ from pydantic import BaseModel
 from schema.user import User
 from route.dependencies import get_current_user
 from dao.exam_session_dao import ExamSessionDao
+from dao.exam_result_dao import ExamResultDao
+from schema.exam_result import ExamResult
 from service.docker_manager import exec_test
+import json
 
 router = APIRouter(prefix="/exam", tags=["exam"])
 
@@ -69,4 +72,16 @@ def submit_exam(req: SubmitExamRequest, user: User = Depends(get_current_user)):
     result = exec_test(req.container_id, req.article)
     if "error" in result:
         raise HTTPException(status_code=500, detail=result["error"])
+
+    # Save result to database
+    exam_result = ExamResult(
+        user_id=user.id,
+        article_name=req.article,
+        score=result.get("score", 0),
+        max_score=result.get("max_score", 100),
+        passed=result.get("passed", False),
+        cases_json=json.dumps(result.get("cases", []))
+    )
+    ExamResultDao.create(exam_result)
+
     return result
