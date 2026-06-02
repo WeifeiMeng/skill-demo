@@ -28,6 +28,9 @@ class ArticleUpdate(BaseModel):
 @router.get("/articles")
 def list_articles(admin: User = Depends(get_admin_user)):
     """列出所有题目（含 test_config 和附件列表）"""
+    from service.article_service import list_articles as get_articles
+    title_map = {a["filename"]: a["title"] for a in get_articles()}
+
     result = []
     if not os.path.exists(ARTICLES_DIR):
         return result
@@ -55,6 +58,7 @@ def list_articles(admin: User = Depends(get_admin_user)):
 
         result.append({
             "filename": fname,
+            "title": title_map.get(fname, fname),
             "content": content,
             "test_config": test_config,
             "attachments": attachments
@@ -119,17 +123,19 @@ def upload_attachment(name: str, file: UploadFile = File(...), admin: User = Dep
     attachments_dir = os.path.join(dirpath, "attachments")
     os.makedirs(attachments_dir, exist_ok=True)
 
-    filepath = os.path.join(attachments_dir, file.filename)
+    safe_name = os.path.basename(file.filename)
+    filepath = os.path.join(attachments_dir, safe_name)
     with open(filepath, "wb") as f:
         f.write(file.file.read())
 
-    return {"success": True, "filename": file.filename}
+    return {"success": True, "filename": safe_name}
 
 
 @router.delete("/articles/{name}/attachments/{filename}")
 def delete_attachment(name: str, filename: str, admin: User = Depends(get_admin_user)):
     """删除附件"""
-    filepath = os.path.join(ARTICLES_DIR, name, "attachments", filename)
+    safe_name = os.path.basename(filename)
+    filepath = os.path.join(ARTICLES_DIR, name, "attachments", safe_name)
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Attachment not found")
     os.remove(filepath)
@@ -234,7 +240,6 @@ def student_detail(user_id: int, admin: User = Depends(get_admin_user)):
     from dao.user_dao import UserDao
     from service.article_service import list_articles as get_articles
     from middleware.database import get_db
-    import json as _json
 
     user = UserDao.get_by_id(user_id)
     if not user:
@@ -269,7 +274,7 @@ def student_detail(user_id: int, admin: User = Depends(get_admin_user)):
                 "latest_score": latest[0],
                 "max_score": latest[1],
                 "passed": latest[2],
-                "cases": _json.loads(latest[3]) if latest[3] else [],
+                "cases": json.loads(latest[3]) if latest[3] else [],
                 "submitted_at": latest[4].isoformat() if latest[4] else None
             })
         else:
