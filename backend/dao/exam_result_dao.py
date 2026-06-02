@@ -14,7 +14,7 @@ class ExamResultDao:
             CREATE TABLE IF NOT EXISTS exam_results (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 user_id INT NOT NULL,
-                article_name VARCHAR(255),
+                article_name VARCHAR(255) NOT NULL,
                 score INT DEFAULT 0,
                 max_score INT DEFAULT 100,
                 passed BOOLEAN DEFAULT FALSE,
@@ -155,7 +155,7 @@ class ExamResultDao:
                 total_users = row[0] or 0
                 total_submissions = row[1] or 0
                 passed_users = row[2] or 0
-                pass_rate = round(passed_users / total_users * 100, 2) if total_users > 0 else 0.0
+                pass_rate = round(passed_users / total_users * 100) if total_users > 0 else 0
                 return {
                     "total_users": total_users,
                     "total_submissions": total_submissions,
