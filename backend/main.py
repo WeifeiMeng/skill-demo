@@ -1,13 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from middleware.database import get_db
-from route import auth, article, docker_container, exam
+from route import auth, article, docker_container, exam, admin
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -18,6 +18,7 @@ app.include_router(auth.router)
 app.include_router(article.router)
 app.include_router(docker_container.router)
 app.include_router(exam.router)
+app.include_router(admin.router)
 
 
 @app.get("/db/test")
