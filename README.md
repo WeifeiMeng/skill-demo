@@ -45,7 +45,7 @@ export ANTHROPIC_BASE_URL="https://你的提供商地址/v1"
 
 # 设置代理地址和 API Key
 export ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic" curl http://host.docker.internal:8002
-export ANTHROPIC_API_KEY="sk-600ec4e4855c4fd5a3cbf76ac26dd1ef"
+export ANTHROPIC_API_KEY=""
 export ANTHROPIC_MODEL="deepseek-v4-flash"
 
 # 设置代理地址和 API Key

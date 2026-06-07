@@ -7,6 +7,7 @@
 ## Visual Style
 
 深色侧边栏 + 浅灰内容区，专业数据面板风格。
+
 - 侧边栏：深色背景 `#0f172a`，白色文字，选中项蓝色高亮
 - 内容区：浅灰背景 `#f1f5f9`，白色卡片
 - 强调色：蓝色系 `#4a6cf7`
@@ -14,6 +15,7 @@
 ## Database Changes
 
 ### users 表加 role 字段
+
 ```sql
 ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user';
 -- 值: 'user' | 'admin'
@@ -21,6 +23,7 @@ ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user';
 ```
 
 ### 新建 exam_results 表
+
 ```sql
 CREATE TABLE exam_results (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -38,6 +41,7 @@ CREATE TABLE exam_results (
 ## Article Directory Structure
 
 每个题目文件夹扩展为：
+
 ```
 articles/<name>/
   readme.md           # 题目描述（markdown）
@@ -47,6 +51,7 @@ articles/<name>/
 ```
 
 ### test_config.json 结构
+
 ```json
 {
   "test_command": "python test.py",
@@ -63,18 +68,20 @@ articles/<name>/
 
 所有管理 API 在 `/admin` 前缀下，需要 admin 角色认证（通过 JWT 中 role=admin 校验）。
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/admin/login` | 管理员登录，校验 role=admin |
-| GET | `/admin/dashboard` | 总览：总考生数、总通过率、题目数、每题通过率 |
-| GET | `/admin/articles` | 题目列表（含 test_config） |
-| POST | `/admin/articles` | 新建题目（创建文件夹 + readme.md + test_config.json） |
-| PUT | `/admin/articles/{name}` | 更新 readme.md 和 test_config.json |
-| DELETE | `/admin/articles/{name}` | 删除题目文件夹 |
-| POST | `/admin/articles/{name}/attachments` | 上传附件到 attachments/ |
-| DELETE | `/admin/articles/{name}/attachments/{filename}` | 删除附件 |
-| GET | `/admin/students` | 考生列表，每人包含完成题数、通过率 |
-| GET | `/admin/students/{user_id}` | 考生详情：各题目答题次数、最高分、最近提交详情 |
+
+| 方法     | 路径                                              | 说明                                         |
+| ------ | ----------------------------------------------- | ------------------------------------------ |
+| POST   | `/admin/login`                                  | 管理员登录，校验 role=admin                        |
+| GET    | `/admin/dashboard`                              | 总览：总考生数、总通过率、题目数、每题通过率                     |
+| GET    | `/admin/articles`                               | 题目列表（含 test_config）                        |
+| POST   | `/admin/articles`                               | 新建题目（创建文件夹 + readme.md + test_config.json） |
+| PUT    | `/admin/articles/{name}`                        | 更新 readme.md 和 test_config.json            |
+| DELETE | `/admin/articles/{name}`                        | 删除题目文件夹                                    |
+| POST   | `/admin/articles/{name}/attachments`            | 上传附件到 attachments/                         |
+| DELETE | `/admin/articles/{name}/attachments/{filename}` | 删除附件                                       |
+| GET    | `/admin/students`                               | 考生列表，每人包含完成题数、通过率                          |
+| GET    | `/admin/students/{user_id}`                     | 考生详情：各题目答题次数、最高分、最近提交详情                    |
+
 
 ### Admin JWT 认证
 
@@ -114,34 +121,40 @@ frontend-admin/
 
 ## Routes
 
-| 路径 | 组件 | 说明 |
-|------|------|------|
-| `/login` | Login | 管理员登录页 |
-| `/dashboard` | Dashboard | 仪表盘首页 |
-| `/articles` | ArticleList | 题目管理列表 |
-| `/articles/new` | ArticleEdit | 新建题目 |
-| `/articles/:name/edit` | ArticleEdit | 编辑题目 |
-| `/students` | StudentList | 考生列表 |
-| `/students/:id` | StudentDetail | 考生详情 |
+
+| 路径                     | 组件            | 说明     |
+| ---------------------- | ------------- | ------ |
+| `/login`               | Login         | 管理员登录页 |
+| `/dashboard`           | Dashboard     | 仪表盘首页  |
+| `/articles`            | ArticleList   | 题目管理列表 |
+| `/articles/new`        | ArticleEdit   | 新建题目   |
+| `/articles/:name/edit` | ArticleEdit   | 编辑题目   |
+| `/students`            | StudentList   | 考生列表   |
+| `/students/:id`        | StudentDetail | 考生详情   |
+
 
 所有路由（除 `/login`）需要登录守卫，检查 token 存在。
 
 ## Key Interactions
 
 ### ArticleEdit（题目编辑器）
+
 - Tab 1 "Markdown"：textarea 编辑 markdown 内容，保存时写入 readme.md
 - Tab 2 "测试用例"：TestCaseEditor 组件，动态添加/删除/编辑测试用例（name + score），保存时写入 test_config.json
 - Tab 3 "附件"：AttachmentList 组件，显示已有附件，支持上传新文件和删除已有文件
 
 ### Dashboard（仪表盘）
+
 - 3 张 StatCard：总考生数、总通过率、题目数
 - 每题通过率条形图：纯 CSS 实现，不引入图表库
 
 ### StudentList（考生列表）
+
 - 顶部统计行：总考生、已通过、未通过
 - 表格列：姓名、邮箱、完成题数、通过率、详情链接
 
 ### StudentDetail（考生详情）
+
 - 汇总卡片：完成题目数、总通过率、平均得分
 - 答题记录表：每题展示提交次数、最高分、通过状态，可展开最近一次提交的测试用例得分明细
 
@@ -155,3 +168,4 @@ frontend-admin/
 - 富文本 markdown 编辑器（先用 textarea）
 - 图表库（先用纯 CSS 条形图）
 - 分页（数据量小时全量返回）
+

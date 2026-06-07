@@ -302,3 +302,11 @@ def student_detail(user_id: int, admin: User = Depends(get_admin_user)):
         ),
         "article_records": article_records
     }
+
+
+@router.post("/students/{user_id}/articles/{article_name}/reset-session")
+def reset_exam_session(user_id: int, article_name: str, admin: User = Depends(get_admin_user)):
+    """重置考生某题目的考试会话，使考生可以重新进入"""
+    from dao.exam_session_dao import ExamSessionDao
+    ok = ExamSessionDao.finish(user_id, article_name)
+    return {"success": True, "reset": ok}

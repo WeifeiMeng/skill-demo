@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coding Coach 管理后台 — 技术文档</title>
+<style>
+  :root {
+    --sidebar: #0f172a;
+    --bg: #f1f5f9;
+    --card: #ffffff;
+    --accent: #4a6cf7;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --code-bg: #1e293b;
+    --green: #22c55e;
+    --red: #ef4444;
+    --orange: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%);
+    color: #fff;
+    padding: 60px 40px;
+    text-align: center;
+  }
+  .hero h1 { font-size: 2.4em; margin-bottom: 8px; letter-spacing: -0.5px; }
+  .hero .sub { color: #94a3b8; font-size: 1.1em; }
+  .hero .meta { margin-top: 20px; display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+  .hero .meta span {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 6px 16px; border-radius: 20px; font-size: .9em;
+  }
+
+  /* ─── Layout ─── */
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 40px 24px; }
+
+  /* ─── Sections ─── */
+  section { margin-bottom: 48px; }
+  h2 {
+    font-size: 1.6em;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--accent);
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .num {
+    background: var(--accent); color: #fff;
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75em; flex-shrink: 0;
+  }
+  h3 { font-size: 1.15em; margin: 24px 0 12px; color: #334155; }
+
+  /* ─── Cards ─── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card h4 { font-size: 1em; margin-bottom: 8px; color: var(--accent); }
+
+  /* ─── Grid ─── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 700px) { .grid2, .grid3 { grid-template-columns: 1fr; } }
+
+  /* ─── Tables ─── */
+  table { width: 100%; border-collapse: collapse; font-size: .92em; }
+  th, td {
+    text-align: left; padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  th { background: #f8fafc; font-weight: 600; color: var(--muted); font-size: .85em; text-transform: uppercase; letter-spacing: .5px; }
+  tr:last-child td { border-bottom: none; }
+  td code { background: #f1f5f9; padding: 2px 7px; border-radius: 4px; font-size: .9em; }
+
+  /* ─── Code ─── */
+  pre {
+    background: var(--code-bg);
+    color: #e2e8f0;
+    padding: 18px 22px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: .87em;
+    line-height: 1.6;
+    margin: 12px 0;
+  }
+  code { font-family: "JetBrains Mono", "Fira Code", "Cascadia Code", monospace; }
+  :not(pre) > code {
+    background: #f1f5f9;
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: .92em;
+  }
+  .cmt { color: #64748b; }
+  .str { color: #a5d6ff; }
+  .kw { color: #c792ea; }
+  .fn { color: #82aaff; }
+
+  /* ─── Tags ─── */
+  .tag {
+    display: inline-block; padding: 2px 10px; border-radius: 12px;
+    font-size: .78em; font-weight: 600;
+  }
+  .tag-get  { background: #dbeafe; color: #1d4ed8; }
+  .tag-post { background: #dcfce7; color: #15803d; }
+  .tag-put  { background: #fef3c7; color: #b45309; }
+  .tag-del  { background: #fee2e2; color: #b91c1c; }
+
+  /* ─── File tree ─── */
+  .tree { font-family: "JetBrains Mono", "Fira Code", monospace; font-size: .88em; line-height: 1.8; color: #475569; }
+  .tree .dir { color: var(--accent); font-weight: 600; }
+  .tree .new { color: var(--green); }
+  .tree .mod { color: var(--orange); }
+
+  /* ─── Stat boxes ─── */
+  .stat-row { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+  .stat {
+    flex: 1; min-width: 140px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 20px; text-align: center;
+  }
+  .stat .val { font-size: 2em; font-weight: 700; color: var(--accent); }
+  .stat .lbl { font-size: .85em; color: var(--muted); margin-top: 2px; }
+
+  /* ─── Footer ─── */
+  footer {
+    text-align: center; color: var(--muted); font-size: .85em;
+    padding: 32px 24px; border-top: 1px solid var(--border); margin-top: 40px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="hero">
+  <h1>Coding Coach 管理后台</h1>
+  <p class="sub">Admin Dashboard — 技术实现文档</p>
+  <div class="meta">
+    <span>2026-06-02</span>
+    <span>FastAPI + Vue 3 + MySQL</span>
+    <span>frontend-admin（独立项目）</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section>
+  <h2><span class="num">1</span> 项目概述</h2>
+  <div class="card">
+    <p>为 <strong>Coding Coach</strong> 平台构建完整的管理后台，提供题目管理和考生数据分析两大核心能力。</p>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="val">2</div><div class="lbl">项目模块</div></div>
+    <div class="stat"><div class="val">14</div><div class="lbl">新增/修改文件</div></div>
+    <div class="stat"><div class="val">9</div><div class="lbl">API 端点</div></div>
+    <div class="stat"><div class="val">7</div><div class="lbl">前端路由</div></div>
+    <div class="stat"><div class="val">6</div><div class="lbl">Vue 视图</div></div>
+  </div>
+
+  <h3>架构总览</h3>
+  <div class="card">
+<pre>
+┌──────────────────────────┐   ┌──────────────────────────┐
+│  frontend-admin (:3001)  │   │   frontend (:3000)       │
+│  独立 Vue 3 管理后台      │   │  用户端 Vue 3 应用        │
+└───────────┬──────────────┘   └───────────┬──────────────┘
+            │                              │
+            └──────────┬───────────────────┘
+                       ▼
+            ┌─────────────────────┐
+            │  FastAPI (:8000)    │
+            │  /auth  /exam       │
+            │  /admin (新增)       │
+            └──────────┬──────────┘
+                       ▼
+            ┌─────────────────────┐
+            │  MySQL (skills_demo)│
+            │  users + exam_results│
+            └─────────────────────┘</pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section>
+  <h2><span class="num">2</span> 项目文件结构</h2>
+
+  <h3>后端 (backend/)</h3>
+  <div class="card">
+    <div class="tree">
+<span class="dir">backend/</span><br>
+├── main.py                              <span class="mod">[已修改]</span><br>
+├── <span class="dir">schema/</span><br>
+│   ├── user.py                          <span class="mod">[已修改 — 添加 role 字段]</span><br>
+│   └── exam_result.py                   <span class="new">[新建 — 考试结果数据类]</span><br>
+├── <span class="dir">dao/</span><br>
+│   ├── user_dao.py                      <span class="mod">[已修改 — 添加 role 列]</span><br>
+│   └── exam_result_dao.py               <span class="new">[新建 — 考试结果 CRUD]</span><br>
+├── <span class="dir">route/</span><br>
+│   ├── auth.py                          <span class="mod">[已修改 — 返回 role]</span><br>
+│   ├── dependencies.py                  <span class="mod">[已修改 — get_admin_user]</span><br>
+│   ├── exam.py                          <span class="mod">[已修改 — 保存考试结果]</span><br>
+│   └── admin.py                         <span class="new">[新建 — 全部管理路由]</span><br>
+└── <span class="dir">service/</span><br>
+    └── auth_service.py                  <span class="mod">[已修改 — JWT 含 role]</span>
+    </div>
+  </div>
+
+  <h3>前端 (frontend-admin/)</h3>
+  <div class="card">
+    <div class="tree">
+<span class="dir">frontend-admin/</span>                   <span class="new">[新建项目]</span><br>
+├── index.html<br>
+├── package.json<br>
+├── vite.config.js<br>
+└── <span class="dir">src/</span><br>
+    ├── main.js<br>
+    ├── style.css<br>
+    ├── router.js<br>
+    ├── App.vue<br>
+    ├── <span class="dir">components/</span><br>
+    │   ├── Sidebar.vue                     <span class="new">[侧边栏导航]</span><br>
+    │   ├── StatCard.vue                    <span class="new">[统计卡片组件]</span><br>
+    │   ├── TestCaseEditor.vue              <span class="new">[测试用例编辑器]</span><br>
+    │   └── AttachmentList.vue              <span class="new">[附件上传/删除]</span><br>
+    └── <span class="dir">views/</span><br>
+        ├── Login.vue                       <span class="new">[管理员登录]</span><br>
+        ├── Dashboard.vue                   <span class="new">[数据仪表盘]</span><br>
+        ├── ArticleList.vue                 <span class="new">[题目列表]</span><br>
+        ├── ArticleEdit.vue                 <span class="new">[题目编辑]</span><br>
+        ├── StudentList.vue                 <span class="new">[考生列表]</span><br>
+        └── StudentDetail.vue               <span class="new">[考生详情]</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section>
+  <h2><span class="num">3</span> 数据库变更</h2>
+
+  <h3>3.1 users 表 — 添加 role 字段</h3>
+  <div class="card">
+    <pre>ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'user';
+<span class="cmt">-- 值: 'user' | 'admin'</span>
+<span class="cmt">-- 首次管理员通过 SQL 直接设置: UPDATE users SET role='admin' WHERE ...</span></pre>
+  </div>
+
+  <h3>3.2 exam_results 表 — 新建</h3>
+  <div class="card">
+    <pre><span class="kw">CREATE TABLE</span> exam_results (
+    id          <span class="kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    user_id     <span class="kw">INT NOT NULL</span>,
+    article_name <span class="kw">VARCHAR</span>(255) <span class="kw">NOT NULL</span>,
+    score       <span class="kw">INT DEFAULT</span> 0,
+    max_score   <span class="kw">INT DEFAULT</span> 100,
+    passed      <span class="kw">BOOLEAN DEFAULT FALSE</span>,
+    cases_json  <span class="kw">TEXT</span>,
+    submitted_at <span class="kw">DATETIME DEFAULT CURRENT_TIMESTAMP</span>,
+    <span class="kw">FOREIGN KEY</span> (user_id) <span class="kw">REFERENCES</span> users(id)
+);</pre>
+  </div>
+
+  <h3>3.3 题目目录结构</h3>
+  <div class="card">
+<pre>articles/<span class="str">&lt;name&gt;</span>/
+├── readme.md           <span class="cmt"># 题目描述（Markdown）</span>
+├── test_config.json    <span class="cmt"># 测试用例配置</span>
+└── attachments/        <span class="cmt"># 附件文件</span>
+    └── ...</pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section>
+  <h2><span class="num">4</span> API 端点</h2>
+
+  <table>
+    <thead>
+      <tr><th>方法</th><th>路径</th><th>认证</th><th>说明</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-get">GET</span></td>
+        <td><code>/admin/dashboard</code></td>
+        <td>admin</td>
+        <td>总览统计：总考生数、总提交数、通过人数、整体通过率、每题通过率</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-get">GET</span></td>
+        <td><code>/admin/articles</code></td>
+        <td>admin</td>
+        <td>题目列表（含 readme 内容、test_config、附件列表）</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-post">POST</span></td>
+        <td><code>/admin/articles</code></td>
+        <td>admin</td>
+        <td>新建题目（创建目录 + readme.md + test_config.json + attachments/）</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-put">PUT</span></td>
+        <td><code>/admin/articles/{name}</code></td>
+        <td>admin</td>
+        <td>更新题目的 readme.md 和 test_config.json</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-del">DELETE</span></td>
+        <td><code>/admin/articles/{name}</code></td>
+        <td>admin</td>
+        <td>删除整个题目目录（<code>shutil.rmtree</code>）</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-post">POST</span></td>
+        <td><code>/admin/articles/{name}/attachments</code></td>
+        <td>admin</td>
+        <td>上传附件文件（已做路径穿越防护）</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-del">DELETE</span></td>
+        <td><code>/admin/articles/{name}/attachments/{filename}</code></td>
+        <td>admin</td>
+        <td>删除附件</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-get">GET</span></td>
+        <td><code>/admin/students</code></td>
+        <td>admin</td>
+        <td>考生列表：每人完成题数、通过数、通过率</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-get">GET</span></td>
+        <td><code>/admin/students/{user_id}</code></td>
+        <td>admin</td>
+        <td>考生详情：各题目答题记录、每次提交分数、测试用例结果</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>认证流程</h3>
+  <div class="card">
+    <p>管理员与用户共享 <code>/auth/login</code> 登录入口。JWT payload 中包含 <code>role</code> 字段：</p>
+    <pre>{
+  "sub": "2",
+  "email": "admin@test.com",
+  "role": "admin",          <span class="cmt">// 关键字段</span>
+  "exp": 1781018761
+}</pre>
+    <p>所有 <code>/admin/*</code> 路由通过 <code>get_admin_user</code> 依赖检查 <code>role != "admin"</code> → 403。</p>
+    <pre><span class="kw">def</span> <span class="fn">get_admin_user</span>(user: User = Depends(get_current_user)):
+    <span class="kw">if</span> user.role != <span class="str">"admin"</span>:
+        <span class="kw">raise</span> HTTPException(status_code=403, detail=<span class="str">"Admin access required"</span>)
+    <span class="kw">return</span> user</pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section>
+  <h2><span class="num">5</span> 前端页面</h2>
+
+  <h3>路由表</h3>
+  <table>
+    <thead><tr><th>路径</th><th>组件</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>/login</code></td><td>Login.vue</td><td>管理员登录页（深色主题）</td></tr>
+      <tr><td><code>/dashboard</code></td><td>Dashboard.vue</td><td>数据仪表盘（统计卡片 + 每题通过率条形图）</td></tr>
+      <tr><td><code>/articles</code></td><td>ArticleList.vue</td><td>题目列表（表格 + 编辑/删除操作）</td></tr>
+      <tr><td><code>/articles/new</code></td><td>ArticleEdit.vue</td><td>新建题目</td></tr>
+      <tr><td><code>/articles/:name/edit</code></td><td>ArticleEdit.vue</td><td>编辑题目（复用同一组件）</td></tr>
+      <tr><td><code>/students</code></td><td>StudentList.vue</td><td>考生列表（统计卡片 + 表格）</td></tr>
+      <tr><td><code>/students/:id</code></td><td>StudentDetail.vue</td><td>考生详情（答题记录展开 + 测试用例详情）</td></tr>
+    </tbody>
+  </table>
+
+  <h3>路由守卫</h3>
+  <div class="card">
+    <p>除 <code>/login</code> 外所有路由检查 <code>localStorage.admin_token</code>，无 token 则跳转登录页。</p>
+  </div>
+
+  <h3>核心组件</h3>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>Sidebar.vue</h4>
+      <p>深色侧边栏（#0f172a），导航链接切换，当前页蓝色高亮。底部退出登录按钮。</p>
+    </div>
+    <div class="card">
+      <h4>StatCard.vue</h4>
+      <p>可复用的统计卡片，<code>props: label, value, color</code>。左侧彩色边框 + 数字居中展示。</p>
+    </div>
+    <div class="card">
+      <h4>TestCaseEditor.vue</h4>
+      <p>动态增删测试用例，每个用例含 <code>name</code>（名称）和 <code>score</code>（分值）。双向绑定数组。</p>
+    </div>
+    <div class="card">
+      <h4>AttachmentList.vue</h4>
+      <p>文件列表展示 + 拖拽/点击上传（FormData）。支持删除附件，显示已上传文件名。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section>
+  <h2><span class="num">6</span> 视觉效果</h2>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>布局方案</h4>
+      <p>深色侧边栏 + 浅灰内容区，专业数据面板风格。</p>
+      <ul style="padding-left:20px; color:var(--muted); margin-top:8px;">
+        <li>侧边栏：<code>#0f172a</code> 深蓝黑</li>
+        <li>内容区背景：<code>#f1f5f9</code> 浅灰</li>
+        <li>卡片：白色 <code>#ffffff</code></li>
+        <li>强调色：<code>#4a6cf7</code> 蓝色系</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>登录页特色</h4>
+      <p>居中深色卡片 + 渐变背景，品牌识别度高。输入邮箱密码后调用 <code>/auth/login</code>，只允许 <code>role=admin</code> 登入。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section>
+  <h2><span class="num">7</span> 关键代码片段</h2>
+
+  <h3>考试提交自动记录</h3>
+  <div class="card">
+    <p>在 <code>route/exam.py</code> 的 <code>submit_exam</code> 中，执行测试后自动保存到数据库：</p>
+    <pre>exam_result = ExamResult(
+    user_id=user.id,
+    article_name=req.article,
+    score=result.get(<span class="str">"score"</span>, 0),
+    max_score=result.get(<span class="str">"max_score"</span>, 100),
+    passed=result.get(<span class="str">"passed"</span>, False),
+    cases_json=json.dumps(result.get(<span class="str">"cases"</span>, []))
+)
+ExamResultDao.create(exam_result)</pre>
+  </div>
+
+  <h3>附件上传安全防护</h3>
+  <div class="card">
+    <pre><span class="cmt"># 防止路径穿越攻击 (../../malicious.py)</span>
+safe_name = os.path.basename(file.filename)
+filepath = os.path.join(attachments_dir, safe_name)</pre>
+  </div>
+
+  <h3>管理端 API 统一响应格式</h3>
+  <div class="card">
+    <pre><span class="cmt"># 成功</span>
+{ "success": true, "filename": "test-article" }
+
+<span class="cmt"># 失败</span>
+{ "detail": "Admin access required" }   <span class="cmt">// HTTP 403</span>
+{ "detail": "Article not found" }       <span class="cmt">// HTTP 404</span></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section>
+  <h2><span class="num">8</span> 启动与运行</h2>
+
+  <h3>后端</h3>
+  <div class="card">
+    <pre><span class="cmt"># 1. 确保 MySQL 已创建 skills_demo 数据库</span>
+cd backend
+uv run uvicorn main:app --reload --port 8000
+
+<span class="cmt"># 2. 创建管理员（首次）</span>
+<span class="cmt">#    先通过 /auth/register 注册，然后 SQL 设置 role:</span>
+<span class="cmt">#    UPDATE users SET role = 'admin' WHERE email = 'admin@test.com';</span></pre>
+  </div>
+
+  <h3>初始管理员账号</h3>
+  <div class="card">
+    <table>
+      <thead><tr><th>字段</th><th>值</th></tr></thead>
+      <tbody>
+        <tr><td>邮箱</td><td><code>admin@test.com</code></td></tr>
+        <tr><td>密码</td><td><code>admin123</code></td></tr>
+        <tr><td>角色</td><td><code>admin</code></td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:12px;color:var(--muted);font-size:.9em;">该账号在集成验证时创建，可直接登录管理后台。如需新增管理员，先用 <code>/auth/register</code> 注册，再通过 SQL 将 <code>role</code> 设为 <code>'admin'</code>。</p>
+  </div>
+
+  <h3>前端</h3>
+  <div class="card">
+    <pre>cd frontend-admin
+npm install
+npm run dev             <span class="cmt"># → http://localhost:3001</span></pre>
+  </div>
+
+  <h3>端口一览</h3>
+  <div class="stat-row">
+    <div class="stat"><div class="val">8000</div><div class="lbl">后端 API</div></div>
+    <div class="stat"><div class="val">3000</div><div class="lbl">用户前端</div></div>
+    <div class="stat"><div class="val">3001</div><div class="lbl">管理后台</div></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<section>
+  <h2><span class="num">9</span> Git 记录</h2>
+
+  <table>
+    <thead><tr><th>Commit</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><code>e97502e</code></td><td>feat: article folder structure, remove polling, logout redirect, submit button</td></tr>
+      <tr><td><code>f08d3ee</code></td><td>claude working file</td></tr>
+      <tr><td><code>a100db6</code></td><td>feat: add admin router with dashboard + article CRUD + student APIs</td></tr>
+      <tr><td><code>4576626</code></td><td>fix: ONLY_FULL_GROUP_BY SQL error in ExamResultDao</td></tr>
+      <tr><td><code>20fb053</code></td><td>feat: update</td></tr>
+      <tr><td><code>9c94df6</code></td><td>feat: update</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</div>
+
+<footer>
+  Coding Coach Admin Dashboard &copy; 2026 &mdash; Generated 2026-06-02
+</footer>
+
+</body>
+</html>

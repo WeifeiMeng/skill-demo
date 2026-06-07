@@ -26,6 +26,11 @@
               <span v-else :class="r.passed ? 'status-pass' : 'status-fail'">
                 {{ r.latest_score }}分 {{ r.passed ? 'PASS' : 'FAIL' }}
               </span>
+              <button
+                class="reset-btn"
+                :disabled="resetting[r.article_name]"
+                @click.stop="resetSession(r.article_name)"
+              >{{ resetting[r.article_name] ? '重置中...' : '重置时间' }}</button>
               <span class="toggle-arrow">{{ expanded[r.article_name] ? '▾' : '▸' }}</span>
             </div>
           </div>
@@ -51,6 +56,7 @@ const route = useRoute()
 const API_BASE = 'http://localhost:8000'
 const data = ref({ name: '', email: '', completed: 0, total: 0, pass_rate: 0, avg_score: 0, article_records: [] })
 const expanded = reactive({})
+const resetting = reactive({})
 
 const getHeaders = () => {
   const t = localStorage.getItem('admin_token')
@@ -58,6 +64,26 @@ const getHeaders = () => {
 }
 
 const toggle = (name) => { expanded[name] = !expanded[name] }
+
+const resetSession = async (articleName) => {
+  resetting[articleName] = true
+  try {
+    const res = await fetch(
+      `${API_BASE}/admin/students/${route.params.id}/articles/${articleName}/reset-session`,
+      { method: 'POST', headers: { ...getHeaders(), 'Content-Type': 'application/json' } }
+    )
+    if (res.ok) {
+      alert('会话已重置，考生可重新进入')
+    } else {
+      const err = await res.json().catch(() => ({}))
+      alert(err.detail || '重置失败')
+    }
+  } catch (e) {
+    alert('重置请求失败: ' + e.message)
+  } finally {
+    resetting[articleName] = false
+  }
+}
 
 onMounted(async () => {
   const res = await fetch(`${API_BASE}/admin/students/${route.params.id}`, { headers: getHeaders() })
@@ -101,5 +127,12 @@ onMounted(async () => {
 .case-fail { background: #fef2f2; }
 .case-score { color: #64748b; font-size: 12px; margin-left: auto; }
 .case-msg { color: #94a3b8; font-size: 12px; }
+.reset-btn {
+  background: #fef3c7; color: #b45309; border: 1px solid #f59e0b;
+  padding: 3px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  white-space: nowrap;
+}
+.reset-btn:hover { background: #fde68a; }
+.reset-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .empty { color: #94a3b8; font-size: 13px; text-align: center; padding: 24px 0; }
 </style>
