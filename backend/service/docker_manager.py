@@ -2,13 +2,18 @@ import docker
 import random
 import re
 import shutil
+import sys
 import toml
 import os
+import urllib.request
+import json as json_mod
 
 # 读取配置文件，workspaces_base 相对于 backend 目录
 _config = toml.load(os.path.join(os.path.dirname(__file__), "..", "setting.toml"))
 backend_dir = os.path.dirname(os.path.dirname(__file__))
 WORKSPACES_BASE = os.path.join(backend_dir, _config["docker"]["workspaces_base"])
+LLM_PIPE_BASE_URL = _config["llm_pipe"]["base_url"]
+LLM_PIPE_MODEL = _config["llm_pipe"]["model"]
 
 def _get_client():
     """延迟初始化 Docker 客户端"""
@@ -60,7 +65,7 @@ def find_container_by_article(username: str, article_name: str):
     return None
 
 
-def create_container(username: str, image: str, article_name: str | None = None):
+def create_container(username: str, image: str, user_id: int, article_name: str | None = None):
     port = random.randint(20000, 30000)
     env_name = get_next_env_name()
 
@@ -81,14 +86,25 @@ def create_container(username: str, image: str, article_name: str | None = None)
         labels["user"] = username
         labels["article"] = article_name
 
-    # 从宿主环境透传 AI 相关环境变量到容器
-    ai_env = {
-        k: v for k, v in {
-            "ANTHROPIC_BASE_URL": os.environ.get("ANTHROPIC_BASE_URL"),
-            "ANTHROPIC_API_KEY": os.environ.get("ANTHROPIC_API_KEY"),
-            "ANTHROPIC_MODEL": os.environ.get("ANTHROPIC_MODEL"),
-        }.items() if v is not None
-    }
+    # 从 llm-pipe 获取用户的 API key
+    api_key = None
+    try:
+        url = f"{LLM_PIPE_BASE_URL}/api/v1/users/{user_id}/api-key"
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json_mod.loads(resp.read().decode("utf-8"))
+            api_key = data.get("api_key")
+    except Exception as e:
+        print(f"Warning: failed to fetch API key from llm-pipe: {e}")
+
+    # 构建 Claude 环境变量（api_key 动态获取，其余从配置读取）
+    # 容器内 localhost 指向容器自己，需替换为 host.docker.internal 访问宿主机服务
+    base_url_for_container = LLM_PIPE_BASE_URL.replace("localhost", "host.docker.internal")
+    ai_env = {}
+    if api_key:
+        ai_env["ANTHROPIC_API_KEY"] = api_key
+        ai_env["ANTHROPIC_BASE_URL"] = f"{base_url_for_container}/api/v1/proxy/anthropic"
+        ai_env["ANTHROPIC_MODEL"] = LLM_PIPE_MODEL
 
     container = _get_client().containers.run(
         image,
@@ -103,7 +119,7 @@ def create_container(username: str, image: str, article_name: str | None = None)
         extra_hosts={"host.docker.internal": "host-gateway"}
     )
 
-    # 将 ANTHROPIC 环境变量写入容器 ~/.bashrc，方便用户终端使用
+    # 将 Claude 环境变量写入容器 ~/.bashrc，方便用户终端使用
     if ai_env:
         lines = "".join(f'export {k}="{v}"\n' for k, v in ai_env.items())
         cmd = ["bash", "-c", f"cat >> ~/.bashrc <<'ENVEOF'\n{lines}ENVEOF"]
@@ -233,12 +249,17 @@ def exec_test(container_id: str, article_name: str):
     except Exception as e:
         return {"error": f"Failed to read test file: {e}"}
 
-    # Base64 编码后通过 exec_run 注入容器执行
-    b64 = base64.b64encode(test_code.encode("utf-8")).decode("ascii")
-    cmd = f'python3 -c "import base64; exec(base64.b64decode(\'{b64}\'))"'
-
     try:
         container = _get_client().containers.get(container_id)
+
+        # 自动安装依赖
+        install_cmd = "if [ -f /workspace/requirements.txt ]; then pip3 install --break-system-packages --root-user-action=ignore -r /workspace/requirements.txt -q 2>&1; else echo 'no requirements.txt'; fi"
+        install_result = container.exec_run(["bash", "-c", install_cmd], user="root")
+        print(f"[exec_test] pip install: {install_result.output.decode('utf-8', errors='replace')[:500]}", file=sys.stderr)
+
+        # Base64 编码后通过 exec_run 注入容器执行
+        b64 = base64.b64encode(test_code.encode("utf-8")).decode("ascii")
+        cmd = f'python3 -c "import base64; exec(base64.b64decode(\'{b64}\'))"'
         result = container.exec_run(cmd, user="root")
     except docker.errors.NotFound:
         return {"error": "Container not found"}

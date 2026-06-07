@@ -29,7 +29,7 @@ async def create_env(request: Request, user: User = Depends(get_current_user)):
             return existing
 
     # 没有则新建
-    result = create_container(user.name, image, article_name=article)
+    result = create_container(user.name, image, user.id, article_name=article)
     return result
 
 

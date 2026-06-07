@@ -12,3 +12,7 @@ default_image = "ai-coach:1.0"
 
 [auth]
 secret = "your-secret-key-change-in-production"
+
+[llm_pipe]
+base_url = "http://localhost:8002"
+model = "deepseek-v4-pro"
