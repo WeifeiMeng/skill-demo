@@ -198,10 +198,10 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 
 // Inject auth state and actions from App.vue
-const openAuth = inject('openAuth')
-const loggedIn = inject('authLoggedIn')
-const username = inject('authUsername')
-const doLogout = inject('doLogout')
+const openAuth = inject('openAuth', () => {})
+const loggedIn = inject('authLoggedIn', false)
+const username = inject('authUsername', '')
+const doLogout = inject('doLogout', () => {})
 
 const goChallenges = () => {
   router.push({ name: 'challenges' })
