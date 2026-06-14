@@ -1,7 +1,8 @@
 <template>
   <div id="app">
-    <!-- NavBar (always visible) -->
+    <!-- NavBar: hidden on landing page -->
     <NavBar
+      v-if="!isLanding"
       :loggedIn="loggedIn"
       :username="username"
       @login-click="showAuthModal = 'login'"
@@ -24,19 +25,29 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, provide } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import NavBar from './NavBar.vue'
 import AuthModal from './AuthModal.vue'
 
 const router = useRouter()
+const route = useRoute()
 
 // Auth state
 const loggedIn = ref(false)
 const username = ref('')
 
 // Modal state
-const showAuthModal = ref(null)   // null, 'login', 'register'
+const showAuthModal = ref(null)
+
+// Detect landing page route
+const isLanding = computed(() => route.name === 'landing')
+
+// Provide auth actions to Landing.vue
+provide('openAuth', (mode) => { showAuthModal.value = mode })
+provide('authLoggedIn', loggedIn)
+provide('authUsername', username)
+provide('doLogout', logout)
 
 const handleLogin = (user) => {
   username.value = user.name
