@@ -49,12 +49,12 @@ const logout = () => {
   localStorage.removeItem('user')
   loggedIn.value = false
   username.value = ''
-  router.push({ name: 'home' })
+  router.push({ name: 'challenges' })
 }
 
 const goHome = () => {
-  if (router.currentRoute.value.name !== 'home') {
-    router.push({ name: 'home' })
+  if (router.currentRoute.value.name !== 'challenges') {
+    router.push({ name: 'challenges' })
   }
 }
 

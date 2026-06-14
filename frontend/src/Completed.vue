@@ -10,7 +10,7 @@
       <h1 class="completed-title">您已完成考试</h1>
       <p class="completed-sub" v-if="articleTitle">{{ articleTitle }}</p>
       <p class="completed-status">状态：<span class="status-text">已完成</span></p>
-      <button class="back-home-btn" @click="$router.push({ name: 'home' })">返回首页</button>
+      <button class="back-home-btn" @click="$router.push({ name: 'challenges' })">返回首页</button>
     </div>
   </div>
 </template>

@@ -220,7 +220,7 @@ const submitTest = async () => {
 
 const goBack = () => {
   // 返回首页，保留考试状态
-  router.push({ name: 'home' })
+  router.push({ name: 'challenges' })
 }
 
 const finish = async () => {
@@ -285,7 +285,7 @@ onMounted(async () => {
   // Check auth
   const token = localStorage.getItem('token')
   if (!token) {
-    router.push({ name: 'home' })
+    router.push({ name: 'challenges' })
     return
   }
 
