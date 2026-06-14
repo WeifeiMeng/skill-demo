@@ -43,12 +43,6 @@ const showAuthModal = ref(null)
 // Detect landing page route
 const isLanding = computed(() => route.name === 'landing')
 
-// Provide auth actions to Landing.vue
-provide('openAuth', (mode) => { showAuthModal.value = mode })
-provide('authLoggedIn', loggedIn)
-provide('authUsername', username)
-provide('doLogout', logout)
-
 const handleLogin = (user) => {
   username.value = user.name
   loggedIn.value = true
@@ -68,6 +62,12 @@ const goHome = () => {
     router.push({ name: 'challenges' })
   }
 }
+
+// Provide auth actions to Landing.vue (after function declarations)
+provide('openAuth', (mode) => { showAuthModal.value = mode })
+provide('authLoggedIn', loggedIn)
+provide('authUsername', username)
+provide('doLogout', logout)
 
 // Restore session on mount
 const savedToken = localStorage.getItem('token')
