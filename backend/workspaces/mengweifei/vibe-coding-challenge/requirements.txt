@@ -1,11 +1,4 @@
-# 冷启动新品配额分配系统 - 依赖包
-
-# 数据处理
-pandas>=1.5.0
-numpy>=1.21.0
-
-# 最优化求解（无需 Gurobi license）
 pulp>=2.7.0
-
-# 可选：若使用 scipy 的 milp 替代 pulp
-# scipy>=1.11.0
+pandas>=1.5.0
+numpy>=1.24.0
+scipy>=1.10.0

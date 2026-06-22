@@ -1,0 +1,10 @@
+ODPS 数据交付清单
+==================================================
+日期分区: ds=20260501
+目标表: icbu_ensa.dws_new_prod_quota_result
+记录数: 200
+数据文件: 20260501_quota_ready_for_odps.csv
+文件大小: 38309 字节
+
+请 DBA 使用以下命令入库:
+  tunnel upload 20260501_quota_ready_for_odps.csv icbu_ensa.dws_new_prod_quota_result/ds=20260501/

@@ -1,111 +1,123 @@
-#!/usr/bin/env python3
 """
-参考实现：每日冷启新品配额分配（供 review 用）
+参考实现：新品冷启动流量配额分配系统
+=========================================
+注意：这段代码包含多处设计缺陷和潜在 bug，请仔细 review。
 
-以下代码实现了从 ODPS 获取数据、解析、求解、写入的全流程。
-请从正确性、鲁棒性、工程化三个维度 review，找出其中的设计缺陷和潜在 bug。
+这是生产环境中可能出现的典型写法——看起来"能跑通"，但存在
+正确性、鲁棒性和工程化方面的问题。
 """
 
-import pandas as pd
-import numpy as np
+import csv
+import os
+import sys
 
-# 配置
-ACCESS_ID = "mock_access_id"
-SECRET_KEY = "mock_secret_key"
-PROJECT = "icbu_ensa"
-ENDPOINT = "http://mock-odps.aliyun-inc.com/api"
+# 全局常量
+TOTAL_BUDGET = 100000
+MAX_PER_MERCHANT = 30000
+MAX_PER_PRODUCT = 5000
+MAX_PRODUCTS_PER_MERCHANT = 50
+MAX_PRODUCTS_PER_RQVAE = 100
 
-# 预算系数
-BUDGET_RATIO = 0.95
+FINAL_COLUMNS = [
+    'daily_incremental_imps_pool', 'rqvae_id', 'proxy_ctr', 'proxy_cvr_ab',
+    'proxy_cvr_abpro', 'proxy_cvr_pay', 'proxy_p_ab', 'normalized_proxy_p_ab',
+    'avg_time_to_first_ab', 'median_time_to_first_ab', 'prod_id', 'comp_id',
+    'ipv_roi_自然', 'normalized_ipv_roi_自然', 'crt_time', 'prod_name',
+    'real_imps', 'real_ab', 'base_time_to_first_ab', 'is_broken_zero',
+    'imps_needed_to_break', 'imps_needed_to_break_xiuzheng',
+    'normalized_imps_needed_to_break', 'priority_score', 'rn'
+]
 
 
-def run(ds):
-    """运行每日冷启全流程。"""
-    # 1. 连接 ODPS
-    from mock_odps.odps_client import ODPS
-    client = ODPS(ACCESS_ID, SECRET_KEY, PROJECT, ENDPOINT)
+def parse_big_chunk(big_chunk_string):
+    """解析 big_chunk_string 为结构化数据。"""
+    records = big_chunk_string.split('二')
+    result = []
 
-    # 2. 获取数据
+    for record in records:
+        fields = record.split('一')
+        row = {}
+        for i, col in enumerate(FINAL_COLUMNS):
+            row[col] = fields[i]  # 直接用索引，不做边界检查
+        result.append(row)
+
+    return result
+
+
+def convert_types(rows):
+    """将字符串转换为正确的类型。"""
+    for row in rows:
+        row['proxy_ctr'] = float(row['proxy_ctr'])
+        row['proxy_cvr_ab'] = float(row['proxy_cvr_ab'])
+        row['ipv_roi_自然'] = float(row['ipv_roi_自然'])
+        row['real_imps'] = int(row['real_imps'])
+        row['is_broken_zero'] = int(row['is_broken_zero'])
+        row['base_time_to_first_ab'] = float(row['base_time_to_first_ab'])
+        row['imps_needed_to_break_xiuzheng'] = float(row['imps_needed_to_break_xiuzheng'])
+    return rows
+
+
+def allocate_quota(rows):
+    """配额分配——简化版贪心算法。"""
+    total_used = 0
+    for row in rows:
+        # 按 priority_score 降序分配
+        sorted_rows = sorted(rows, key=lambda x: x['priority_score'], reverse=True)
+
+        for row in sorted_rows:
+            if total_used >= TOTAL_BUDGET:
+                break
+            quota = min(MAX_PER_PRODUCT, TOTAL_BUDGET - total_used)
+            row['x_曝光配额'] = quota
+            total_used += quota
+
+    return rows
+
+
+def write_to_odps(client, rows, ds):
+    """写入 ODPS 结果表。"""
+    sql = (
+        "INSERT OVERWRITE TABLE icbu_ensa.dws_new_prod_quota_result "
+        f"PARTITION (ds='{ds}') "
+        "SELECT * FROM tmp_result"
+    )
+    client.execute_sql(sql)
+    print(f"写入完成: {len(rows)} 条记录")
+
+
+def run_pipeline(ds):
+    """主 pipeline。"""
+    # 先尝试真实 ODPS，失败不处理
+    try:
+        from odps import ODPS as RealODPS
+        client = RealODPS('xxx', 'yyy', 'icbu_ensa')
+    except ImportError:
+        from mock_odps.odps_client import ODPS
+        client = ODPS('mock_id', 'mock_key', 'icbu_ensa')
+
+    # 数据获取
     sql = f"SELECT group_id, big_chunk_string FROM icbu_ensa.dws_new_prod_info_data WHERE ds='{ds}'"
-    result = client.execute_sql(sql, hints={"odps.sql.allow.fullscan": "true"})
+    result = client.execute_sql(sql)
 
-    records = []
+    all_rows = []
     with result.open_reader() as reader:
         for record in reader:
-            records.append([record[0], record[1]])
+            rows = parse_big_chunk(record[1])
+            all_rows.extend(rows)
 
-    # 3. 写入原始 CSV
-    import csv
-    raw_file = f"/tmp/{ds}_raw.csv"
-    with open(raw_file, "w", encoding="gbk") as f:
-        writer = csv.writer(f)
-        writer.writerow(["group_id", "big_chunk_string"])
-        for row in records:
-            writer.writerow(row)
+    # 类型转换
+    all_rows = convert_types(all_rows)
 
-    # 4. 解析数据
-    df = pd.read_csv(raw_file, encoding="gbk")
-    all_data = []
-    for _, row in df.iterrows():
-        chunk = row["big_chunk_string"]
-        items = chunk.split("二")
-        for item in items:
-            fields = item.split("一")
-            all_data.append(fields)
+    # 配额分配
+    all_rows = allocate_quota(all_rows)
 
-    parsed_df = pd.DataFrame(all_data)
-    parsed_file = f"/tmp/{ds}_parsed.csv"
-    parsed_df.to_csv(parsed_file, index=False, encoding="gbk")
+    # 写入结果
+    write_to_odps(client, all_rows, ds)
 
-    # 5. 配额求解
-    data = pd.read_csv(parsed_file, encoding="gbk")
-
-    # 预算
-    budget = data["daily_incremental_imps_pool"].max() * BUDGET_RATIO
-
-    # 贪心分配
-    data_sorted = data.sort_values("priority_score", ascending=False)
-    alloc = []
-    remaining = budget
-    for _, row in data_sorted.iterrows():
-        need = row["imps_needed_to_break_xiuzheng"]
-        if remaining >= need:
-            alloc.append(need)
-            remaining -= need
-        else:
-            alloc.append(0)
-    data["quota"] = alloc
-
-    # 破零时间计算
-    sim_times = []
-    for _, row in data.iterrows():
-        if row["is_broken_zero"] == 1:
-            sim_times.append(row["base_time_to_first_ab"])
-        else:
-            real = row["real_imps"]
-            allocated = row["quota"]
-            sim = row["base_time_to_first_ab"] * real / (real + allocated)
-            sim_times.append(sim)
-    data["sim_time"] = sim_times
-
-    # 6. 写入 ODPS
-    quota_file = f"/tmp/{ds}_quota.csv"
-    data.to_csv(quota_file, index=False, encoding="gbk")
-
-    table = client.get_table("dws_new_prod_quota_result")
-    partition = f"ds='{ds}'"
-
-    # 删除旧分区
-    if table.exist_partition(partition):
-        table.get_partition(partition).drop()
-
-    # 写入
-    with table.open_writer(partition=partition) as writer:
-        for _, row in data.iterrows():
-            writer.write(list(row))
-
-    print(f"Done. Quota saved to {quota_file}")
+    # 输出简单统计
+    print(f"总商品数: {len(all_rows)}")
 
 
-if __name__ == "__main__":
-    run("20260501")
+if __name__ == '__main__':
+    ds = sys.argv[1] if len(sys.argv) > 1 else '20260501'
+    run_pipeline(ds)

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(pip list *)",
+      "Bash(python *)",
+      "Bash(python3 *)",
+      "Bash(MOCK_ODPS_WRITE_ENABLED=1 python3 run_pipeline.py --ds 20260501)"
+    ]
+  }
+}

@@ -2,6 +2,12 @@
 
 一个用于管理 Docker 开发环境的 Web 界面。
 
+## 管理员账号
+
+| 邮箱 | 密码 | 地址 |
+|------|------|------|
+| `admin@test.com` | `admin123` | http://localhost:3001/login
+
 ## 技术栈
 
 - **前端**：Vue 3 + Vite

@@ -53,7 +53,11 @@
       "Bash(cmd //c 'taskkill /F /PID 34072')",
       "Bash(uv run python -c \":*)",
       "Bash(cmd //c \"taskkill /F /PID 16300\")",
-      "Bash(cmd //c \"taskkill /F /PID 31060\")"
+      "Bash(cmd //c \"taskkill /F /PID 31060\")",
+      "Bash(docker run:*)",
+      "Bash(find \"D:\\\\code\\\\skills-demo\\\\backend\" -type d -name \"__pycache__\" -exec rm -rf {} +)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(python3:*)"
     ]
   }
 }
