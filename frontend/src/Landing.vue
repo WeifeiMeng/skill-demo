@@ -152,7 +152,7 @@
           <span class="scenario-cta">开始学习 &rarr;</span>
         </div>
 
-        <div class="scenario-card enterprise" @click="goChallenges">
+        <div class="scenario-card enterprise" @click="goAdmin">
           <div class="scenario-badge">企业版</div>
           <div class="scenario-icon">
             <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
@@ -205,6 +205,10 @@ const doLogout = inject('doLogout', () => {})
 
 const goChallenges = () => {
   router.push({ name: 'challenges' })
+}
+
+const goAdmin = () => {
+  router.push({ name: 'adminDashboard' })
 }
 </script>
 

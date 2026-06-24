@@ -1,8 +1,14 @@
 <template>
   <nav class="navbar">
     <div class="navbar-brand" @click="$emit('home')">
-      <span class="navbar-logo">C</span>
-      <span class="navbar-title">Coding Coach</span>
+      <span class="navbar-logo">AI</span>
+      <span class="navbar-title">AI Done</span>
+    </div>
+    <div class="navbar-links">
+      <router-link to="/challenges" class="nav-link" active-class="nav-link--active">题库</router-link>
+      <router-link to="/solutions" class="nav-link" active-class="nav-link--active">题解广场</router-link>
+      <router-link to="/contest" class="nav-link" active-class="nav-link--active">竞赛</router-link>
+      <router-link to="/leaderboard" class="nav-link" active-class="nav-link--active">排行榜</router-link>
     </div>
     <div class="navbar-actions">
       <template v-if="loggedIn">
@@ -116,5 +122,30 @@ defineEmits(['login-click', 'register-click', 'logout', 'home'])
 .btn-logout:hover {
   background: #e2e8f0;
   color: #475569;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 40px;
+}
+
+.nav-link {
+  padding: 8px 16px;
+  color: #64748b;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+.nav-link:hover {
+  color: #1e293b;
+  background: rgba(74, 108, 247, 0.04);
+}
+.nav-link--active {
+  color: #4a6cf7;
+  background: rgba(74, 108, 247, 0.06);
 }
 </style>

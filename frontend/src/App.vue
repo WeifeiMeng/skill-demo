@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <!-- NavBar: hidden on landing page -->
+    <!-- NavBar: hidden on landing page and admin routes -->
     <NavBar
-      v-if="!isLanding"
+      v-if="!isLanding && !isAdminRoute"
       :loggedIn="loggedIn"
       :username="username"
       @login-click="showAuthModal = 'login'"
@@ -42,6 +42,9 @@ const showAuthModal = ref(null)
 
 // Detect landing page route
 const isLanding = computed(() => route.name === 'landing')
+
+// Detect admin routes (including login)
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 const handleLogin = (user) => {
   username.value = user.name
