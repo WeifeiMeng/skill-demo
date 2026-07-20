@@ -199,9 +199,10 @@ const handleLogout = () => {
   margin-left: 220px;
   flex: 1;
   padding: 32px;
-  max-width: 1100px;
   min-height: 100vh;
   background-color: #f8fafc;
   box-sizing: border-box;
+  width: calc(100vw - 220px);
+  overflow-x: hidden;
 }
 </style>

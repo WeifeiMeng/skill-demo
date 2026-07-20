@@ -40,9 +40,9 @@ async function fetchOrMock(url, options, mockFn) {
 // 导出的 API 函数（按 mockData 工厂函数一一对应）
 // ---------------------------------------------------------------------------
 
-/** 获取挑战列表 */
+/** 获取挑战列表（使用 mock 数据，包含 icon/difficulty/tags/passRate 等完整字段） */
 export async function fetchChallenges() {
-  return fetchOrMock(`${API_BASE}/challenges`, {}, getChallenges)
+  return getChallenges()
 }
 
 /** 获取用户信息 */

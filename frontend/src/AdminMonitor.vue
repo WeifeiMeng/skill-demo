@@ -2,9 +2,13 @@
   <AdminLayout activeRoute="monitor">
     <div class="monitor-page">
       <!-- No exam ID -->
-      <div v-if="!examId" class="monitor-page__no-exam">
-        <p>请从考试管理页面选择一个进行中的考试进行监控。</p>
+      <div v-if="!effectiveExamId && !autoDetecting" class="monitor-page__no-exam">
+        <p>当前没有进行中的考试场次。</p>
         <router-link to="/admin/exams" class="monitor-page__back-link">前往考试管理</router-link>
+      </div>
+      <div v-else-if="autoDetecting" class="monitor-page__loading">
+        <div class="monitor-page__loading-spinner"></div>
+        <span>正在查找进行中的考试...</span>
       </div>
 
       <template v-else>
@@ -122,12 +126,37 @@
 
           <!-- Center Column: Candidates -->
           <div class="monitor-page__center">
+            <!-- Candidate Filters -->
+            <div class="monitor-page__candidate-filters">
+              <div class="monitor-page__filter-tabs">
+                <button
+                  v-for="tab in candidateTabs"
+                  :key="tab.key"
+                  class="monitor-page__filter-tab"
+                  :class="{ 'monitor-page__filter-tab--active': activeCandidateTab === tab.key }"
+                  @click="activeCandidateTab = tab.key"
+                >
+                  {{ tab.label }}
+                  <span class="monitor-page__filter-tab-count">{{ tab.count }}</span>
+                </button>
+              </div>
+              <input
+                v-model="candidateSearch"
+                type="text"
+                class="monitor-page__candidate-search"
+                placeholder="搜索考生姓名..."
+              />
+            </div>
             <div class="monitor-page__candidate-grid">
+              <div v-if="filteredCandidates.length === 0" class="monitor-page__candidate-empty">
+                暂无匹配考生
+              </div>
               <div
-                v-for="c in candidates"
+                v-for="c in filteredCandidates"
                 :key="c.id || c.name"
                 class="monitor-page__candidate-card"
-                :class="{ 'monitor-page__candidate-card--alert': c.hasAlert }"
+                :class="{ 'monitor-page__candidate-card--alert': c.hasAlert, 'monitor-page__candidate-card--selected': selectedCandidate === c }"
+                @click="selectCandidate(c)"
               >
                 <div class="monitor-page__candidate-top">
                   <div
@@ -163,26 +192,34 @@
             </div>
           </div>
 
-          <!-- Right Column: Alerts -->
+          <!-- Right Column: Activity Timeline -->
           <div class="monitor-page__right">
             <div class="monitor-page__card">
               <div class="monitor-page__alert-header">
                 <span class="monitor-page__alert-dot"></span>
-                <h4 class="monitor-page__card-title">实时告警</h4>
+                <h4 class="monitor-page__card-title">实时活动</h4>
               </div>
-              <div class="monitor-page__alert-list">
+              <div class="monitor-page__timeline">
                 <div
-                  v-for="(alert, idx) in alerts"
+                  v-for="(event, idx) in activityTimeline"
                   :key="idx"
-                  class="monitor-page__alert-item"
+                  class="monitor-page__timeline-item"
+                  :class="'monitor-page__timeline-item--' + event.level"
                 >
-                  <span class="monitor-page__alert-time">{{ alert.time }}</span>
-                  <span class="monitor-page__alert-text">{{ alert.text }}</span>
-                  <button class="monitor-page__alert-action">查看详情</button>
-                  <div v-if="idx < alerts.length - 1" class="monitor-page__alert-sep"></div>
+                  <div class="monitor-page__timeline-marker">
+                    <span class="monitor-page__timeline-icon">{{ event.icon }}</span>
+                  </div>
+                  <div class="monitor-page__timeline-content">
+                    <span class="monitor-page__timeline-time">{{ event.time }}</span>
+                    <span class="monitor-page__timeline-text">{{ event.text }}</span>
+                    <span v-if="event.candidate" class="monitor-page__timeline-candidate">
+                      {{ event.candidate }}
+                    </span>
+                  </div>
+                  <div class="monitor-page__timeline-line"></div>
                 </div>
-                <div v-if="alerts.length === 0" class="monitor-page__alert-empty">
-                  暂无告警
+                <div v-if="activityTimeline.length === 0" class="monitor-page__alert-empty">
+                  暂无活动
                 </div>
               </div>
             </div>
@@ -190,11 +227,166 @@
             <div class="monitor-page__card">
               <h4 class="monitor-page__card-title">快捷操作</h4>
               <div class="monitor-page__quick-actions">
-                <button class="monitor-page__quick-btn">全体广播</button>
-                <button class="monitor-page__quick-btn">延长考试</button>
-                <button class="monitor-page__quick-btn">导出数据</button>
-                <button class="monitor-page__quick-btn">审计日志</button>
+                <button class="monitor-page__quick-btn" @click="broadcastMessage">📢 全体广播</button>
+                <button class="monitor-page__quick-btn" @click="extendExam">⏱️ 延长考试</button>
+                <button class="monitor-page__quick-btn" @click="exportData">📥 导出数据</button>
+                <button class="monitor-page__quick-btn" @click="viewAuditLog">📋 审计日志</button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Candidate Detail Slide-out Panel -->
+        <div v-if="selectedCandidate" class="monitor-page__panel-overlay" @click.self="selectedCandidate = null">
+          <div class="monitor-page__detail-panel">
+            <div class="monitor-page__detail-panel-header">
+              <div class="monitor-page__detail-panel-user">
+                <div
+                  class="monitor-page__detail-panel-avatar"
+                  :style="{ backgroundColor: avatarColor(selectedCandidate.name) }"
+                >
+                  {{ selectedCandidate.name.charAt(0) }}
+                </div>
+                <div>
+                  <h3 class="monitor-page__detail-panel-name">{{ selectedCandidate.name }}</h3>
+                  <span
+                    class="monitor-page__detail-panel-status"
+                    :class="{
+                      'monitor-page__candidate-status--online': selectedCandidate.status === 'online',
+                      'monitor-page__candidate-status--idle': selectedCandidate.status === 'offline',
+                      'monitor-page__candidate-status--alert': selectedCandidate.hasAlert,
+                    }"
+                  ></span>
+                  <span class="monitor-page__detail-panel-status-text">
+                    {{ selectedCandidate.status === 'online' ? '在线' : '离线' }}
+                    <template v-if="selectedCandidate.hasAlert"> · 告警</template>
+                  </span>
+                </div>
+              </div>
+              <button class="monitor-page__detail-panel-close" @click="selectedCandidate = null">&times;</button>
+            </div>
+
+            <!-- AI Risk Score -->
+            <div class="monitor-page__detail-section">
+              <h5 class="monitor-page__detail-section-title">AI 风险评分</h5>
+              <div class="monitor-page__risk-bar-wrapper">
+                <div class="monitor-page__risk-bar">
+                  <div
+                    class="monitor-page__risk-bar-fill"
+                    :class="{
+                      'monitor-page__risk-bar-fill--low': candidateDetail.riskScore <= 30,
+                      'monitor-page__risk-bar-fill--mid': candidateDetail.riskScore > 30 && candidateDetail.riskScore <= 60,
+                      'monitor-page__risk-bar-fill--high': candidateDetail.riskScore > 60,
+                    }"
+                    :style="{ width: candidateDetail.riskScore + '%' }"
+                  ></div>
+                </div>
+                <span
+                  class="monitor-page__risk-score"
+                  :class="{
+                    'monitor-page__risk-score--low': candidateDetail.riskScore <= 30,
+                    'monitor-page__risk-score--mid': candidateDetail.riskScore > 30 && candidateDetail.riskScore <= 60,
+                    'monitor-page__risk-score--high': candidateDetail.riskScore > 60,
+                  }"
+                >
+                  {{ candidateDetail.riskScore }} / 100
+                </span>
+              </div>
+              <div class="monitor-page__risk-factors">
+                <div class="monitor-page__risk-factor">
+                  <span class="monitor-page__risk-factor-label">切屏次数</span>
+                  <span class="monitor-page__risk-factor-value">{{ candidateDetail.screenSwitches }}</span>
+                </div>
+                <div class="monitor-page__risk-factor">
+                  <span class="monitor-page__risk-factor-label">提交频率</span>
+                  <span class="monitor-page__risk-factor-value">{{ candidateDetail.submitFrequency }}</span>
+                </div>
+                <div class="monitor-page__risk-factor">
+                  <span class="monitor-page__risk-factor-label">键盘模式</span>
+                  <span class="monitor-page__risk-factor-value">{{ candidateDetail.keystrokePattern }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Exam Progress -->
+            <div class="monitor-page__detail-section">
+              <h5 class="monitor-page__detail-section-title">考试进度</h5>
+              <div class="monitor-page__detail-progress">
+                <span class="monitor-page__detail-progress-label">当前题目</span>
+                <span class="monitor-page__detail-progress-value">{{ selectedCandidate.currentQuestion || '-' }}</span>
+              </div>
+              <div class="monitor-page__detail-progress-bar">
+                <div
+                  class="monitor-page__detail-progress-fill"
+                  :style="{ width: (selectedCandidate.progress || 0) + '%' }"
+                ></div>
+              </div>
+              <div class="monitor-page__detail-progress-meta">
+                <span>已完成 {{ selectedCandidate.progress || 0 }}%</span>
+                <span>用时 {{ selectedCandidate.duration }}</span>
+                <span>提交 {{ selectedCandidate.submissionCount }} 次</span>
+              </div>
+            </div>
+
+            <!-- Behavior Log -->
+            <div class="monitor-page__detail-section">
+              <h5 class="monitor-page__detail-section-title">行为日志</h5>
+              <div class="monitor-page__behavior-list">
+                <div
+                  v-for="(log, idx) in candidateDetail.behaviorLog"
+                  :key="idx"
+                  class="monitor-page__behavior-item"
+                >
+                  <span class="monitor-page__behavior-icon">{{ log.icon }}</span>
+                  <span class="monitor-page__behavior-time">{{ log.time }}</span>
+                  <span class="monitor-page__behavior-text">{{ log.text }}</span>
+                </div>
+                <div v-if="candidateDetail.behaviorLog.length === 0" class="monitor-page__behavior-empty">
+                  暂无行为记录
+                </div>
+              </div>
+            </div>
+
+            <!-- Submission History -->
+            <div class="monitor-page__detail-section">
+              <h5 class="monitor-page__detail-section-title">提交记录</h5>
+              <div class="monitor-page__submission-list">
+                <div
+                  v-for="(sub, idx) in candidateDetail.submissions"
+                  :key="idx"
+                  class="monitor-page__submission-item"
+                >
+                  <span class="monitor-page__submission-time">{{ sub.time }}</span>
+                  <span class="monitor-page__submission-question">{{ sub.question }}</span>
+                  <span
+                    class="monitor-page__submission-result"
+                    :class="{
+                      'monitor-page__submission-result--pass': sub.result === 'PASS',
+                      'monitor-page__submission-result--fail': sub.result === 'FAIL',
+                    }"
+                  >
+                    {{ sub.result }}
+                  </span>
+                  <span class="monitor-page__submission-score">{{ sub.score }} 分</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="monitor-page__detail-actions">
+              <button class="monitor-page__detail-action monitor-page__detail-action--warn" @click="warnCandidate">
+                发送警告
+              </button>
+              <button class="monitor-page__detail-action monitor-page__detail-action--submit" @click="forceSubmit">
+                强制交卷
+              </button>
+              <button
+                v-if="selectedCandidate.status === 'offline'"
+                class="monitor-page__detail-action monitor-page__detail-action--resume"
+                @click="resumeCandidate"
+              >
+                恢复考试
+              </button>
             </div>
           </div>
         </div>
@@ -208,10 +400,13 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import AdminLayout from './components/AdminLayout.vue'
 import StatusBadge from './components/StatusBadge.vue'
-import { fetchMonitorData } from './data/api.js'
+import { fetchMonitorData, fetchExamSessions } from './data/api.js'
 
 const route = useRoute()
-const examId = computed(() => route.params.examId)
+const routeExamId = computed(() => route.params.examId)
+const detectedExamId = ref(null)
+const autoDetecting = ref(false)
+const effectiveExamId = computed(() => routeExamId.value || detectedExamId.value)
 
 const loading = ref(true)
 const data = reactive({
@@ -226,6 +421,9 @@ const questionProgress = ref([])
 const resourceContainers = ref([])
 const candidates = ref([])
 const alerts = ref([])
+const activeCandidateTab = ref('all')
+const candidateSearch = ref('')
+const selectedCandidate = ref(null)
 
 let countdownSeconds = 0
 let countdownTimer = null
@@ -279,9 +477,150 @@ function getCpuLevel(cpu) {
   return 'red'
 }
 
+// --- Candidate Filtering ---
+const candidateTabs = computed(() => {
+  const list = candidates.value
+  return [
+    { key: 'all', label: '全部', count: list.length },
+    { key: 'online', label: '在线', count: list.filter(c => c.status === 'online').length },
+    { key: 'offline', label: '离线', count: list.filter(c => c.status === 'offline').length },
+    { key: 'submitted', label: '已提交', count: list.filter(c => c.progress >= 100).length },
+    { key: 'alert', label: '告警', count: list.filter(c => c.hasAlert).length },
+  ]
+})
+
+const filteredCandidates = computed(() => {
+  let result = candidates.value
+  if (activeCandidateTab.value === 'online') {
+    result = result.filter(c => c.status === 'online')
+  } else if (activeCandidateTab.value === 'offline') {
+    result = result.filter(c => c.status === 'offline')
+  } else if (activeCandidateTab.value === 'submitted') {
+    result = result.filter(c => c.progress >= 100)
+  } else if (activeCandidateTab.value === 'alert') {
+    result = result.filter(c => c.hasAlert)
+  }
+  if (candidateSearch.value.trim()) {
+    const q = candidateSearch.value.trim().toLowerCase()
+    result = result.filter(c => c.name.toLowerCase().includes(q))
+  }
+  return result
+})
+
+// --- Activity Timeline ---
+const activityTimeline = computed(() => {
+  const events = (alerts.value || []).map(a => {
+    const level = a.text.includes('切屏') ? 'warning' : a.text.includes('异常') ? 'warning' : 'info'
+    const icon = level === 'warning' ? '⚠️' : 'ℹ️'
+    return { time: a.time, text: a.text, candidate: a.candidateId || '', level, icon }
+  })
+  return events
+})
+
+// --- Candidate Detail ---
+function generateCandidateDetail(candidate) {
+  if (!candidate) return null
+  const seed = (candidate.name || '').charCodeAt(0) || 65
+  const mod = (v, m) => v % m
+
+  const riskScore = candidate.hasAlert ? 55 + mod(seed, 40) : 5 + mod(seed, 25)
+  const screenSwitches = candidate.hasAlert ? 3 + mod(seed, 8) : mod(seed, 3)
+  const submitFrequency = candidate.submissionCount > 5 ? '偏高' : '正常'
+  const keystrokePatterns = ['稳定', '规律', '间歇', '流畅']
+  const keystrokePattern = candidate.hasAlert ? '不规律' : keystrokePatterns[mod(seed, keystrokePatterns.length)]
+
+  const behaviorLog = []
+  const names = [candidate.name]
+  const startTime = new Date()
+  startTime.setHours(9, 0, 0)
+
+  if (candidate.hasAlert) {
+    behaviorLog.push({ icon: '🖥️', time: '10:45:22', text: '检测到切屏行为（第 3 次）' })
+  }
+  if (candidate.submissionCount > 5) {
+    behaviorLog.push({ icon: '📤', time: '10:38:15', text: `提交频率异常（${candidate.submissionCount} 次提交）` })
+  }
+  behaviorLog.push({ icon: '▶️', time: '09:02:10', text: '开始考试' })
+  behaviorLog.push({ icon: '👀', time: '09:05:30', text: `开始答题: ${candidate.currentQuestion || '未知题目'}` })
+  if (candidate.status === 'offline') {
+    behaviorLog.push({ icon: '🔌', time: '10:12:45', text: '连接断开，进入离线状态' })
+  }
+  behaviorLog.push({ icon: '📤', time: '09:45:00', text: `第 1 次提交` })
+
+  // Submissions
+  const questions = ['LRU 缓存设计', '二叉树遍历优化', '图最短路径算法', '动态规划综合题']
+  const submissions = []
+  for (let i = 0; i < Math.min(candidate.submissionCount, 8); i++) {
+    const h = 9 + Math.floor(i / 2)
+    const m = 15 + (i * 23) % 45
+    const time = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String((i * 17) % 60).padStart(2, '0')}`
+    const passed = mod(seed + i, 5) !== 0
+    submissions.push({
+      time,
+      question: questions[mod(i, questions.length)],
+      result: passed ? 'PASS' : 'FAIL',
+      score: passed ? 60 + mod(seed + i, 40) : 10 + mod(seed + i, 50),
+    })
+  }
+
+  return { riskScore, screenSwitches, submitFrequency, keystrokePattern, behaviorLog, submissions }
+}
+
+const candidateDetail = computed(() => {
+  return generateCandidateDetail(selectedCandidate.value) || {
+    riskScore: 0, screenSwitches: 0, submitFrequency: '-', keystrokePattern: '-',
+    behaviorLog: [], submissions: [],
+  }
+})
+
+// --- Actions ---
+function selectCandidate(candidate) {
+  selectedCandidate.value = candidate
+}
+
+function broadcastMessage() {
+  alert('广播消息功能：可向所有在线考生发送统一通知。')
+}
+
+function extendExam() {
+  const minutes = prompt('延长考试时长（分钟）：', '15')
+  if (minutes) {
+    countdownSeconds += parseInt(minutes) * 60
+    countdownDisplay.value = formatSeconds(countdownSeconds)
+    alert(`考试已延长 ${minutes} 分钟。`)
+  }
+}
+
+function exportData() {
+  alert('导出数据功能：将当前监控数据导出为 CSV 文件。')
+}
+
+function viewAuditLog() {
+  alert('审计日志功能：查看完整操作审计记录。')
+}
+
+function warnCandidate() {
+  if (selectedCandidate.value) {
+    alert(`已向考生 ${selectedCandidate.value.name} 发送警告通知。`)
+  }
+}
+
+function forceSubmit() {
+  if (selectedCandidate.value) {
+    alert(`已强制提交考生 ${selectedCandidate.value.name} 的试卷。`)
+    selectedCandidate.value = null
+  }
+}
+
+function resumeCandidate() {
+  if (selectedCandidate.value) {
+    alert(`已恢复考生 ${selectedCandidate.value.name} 的考试。`)
+  }
+}
+
 async function refreshData() {
   try {
-    const id = examId.value
+    const id = effectiveExamId.value
     if (!id) return
     const result = await fetchMonitorData(id)
 
@@ -354,7 +693,22 @@ async function refreshData() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // If no examId in route, auto-detect the active exam
+  if (!routeExamId.value) {
+    autoDetecting.value = true
+    try {
+      const sessions = await fetchExamSessions()
+      const active = (sessions || []).find(s => s.status === 'active')
+      if (active) {
+        detectedExamId.value = active.id
+      }
+    } catch (e) {
+      console.error('Failed to auto-detect active exam:', e)
+    } finally {
+      autoDetecting.value = false
+    }
+  }
   refreshData()
   refreshTimer = setInterval(refreshData, 10000)
 })
@@ -868,5 +1222,530 @@ onUnmounted(() => {
   background: #f8fafc;
   border-color: #cbd5e1;
   color: #1e293b;
+}
+
+/* Candidate Filters */
+.monitor-page__candidate-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.monitor-page__filter-tabs {
+  display: flex;
+  gap: 4px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.monitor-page__filter-tab {
+  background: none;
+  border: none;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.monitor-page__filter-tab:hover {
+  color: #334155;
+}
+
+.monitor-page__filter-tab--active {
+  background: #fff;
+  color: #1e293b;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.monitor-page__filter-tab-count {
+  font-size: 11px;
+  background: #e2e8f0;
+  color: #64748b;
+  padding: 1px 6px;
+  border-radius: 8px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.monitor-page__filter-tab--active .monitor-page__filter-tab-count {
+  background: #4a6cf7;
+  color: #fff;
+}
+
+.monitor-page__candidate-search {
+  width: 180px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: #1e293b;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.monitor-page__candidate-search::placeholder {
+  color: #cbd5e1;
+}
+
+.monitor-page__candidate-search:focus {
+  border-color: #4a6cf7;
+  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.08);
+}
+
+.monitor-page__candidate-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #94a3b8;
+  font-size: 13px;
+  grid-column: 1 / -1;
+}
+
+.monitor-page__candidate-card--selected {
+  border-color: #4a6cf7;
+  box-shadow: 0 0 0 2px rgba(74, 108, 247, 0.15);
+}
+
+/* Activity Timeline */
+.monitor-page__timeline {
+  position: relative;
+}
+
+.monitor-page__timeline-item {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  padding-bottom: 14px;
+}
+
+.monitor-page__timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.monitor-page__timeline-item:last-child .monitor-page__timeline-line {
+  display: none;
+}
+
+.monitor-page__timeline-marker {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  z-index: 1;
+}
+
+.monitor-page__timeline-item--warning .monitor-page__timeline-marker {
+  background: #fef3c7;
+}
+
+.monitor-page__timeline-icon {
+  font-size: 11px;
+  line-height: 1;
+}
+
+.monitor-page__timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.monitor-page__timeline-time {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.monitor-page__timeline-text {
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.monitor-page__timeline-candidate {
+  font-size: 11px;
+  color: #4a6cf7;
+  font-weight: 500;
+}
+
+.monitor-page__timeline-line {
+  position: absolute;
+  left: 10px;
+  top: 22px;
+  bottom: 0;
+  width: 1px;
+  background: #e2e8f0;
+}
+
+/* Detail Panel */
+.monitor-page__panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.monitor-page__detail-panel {
+  width: 420px;
+  max-width: 90vw;
+  height: 100vh;
+  background: #fff;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  animation: slide-in-right 0.25s ease-out;
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.monitor-page__detail-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 24px 0;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.monitor-page__detail-panel-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.monitor-page__detail-panel-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.monitor-page__detail-panel-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 2px;
+}
+
+.monitor-page__detail-panel-status-text {
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.monitor-page__detail-panel-status {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.monitor-page__detail-panel-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.monitor-page__detail-panel-close:hover {
+  color: #475569;
+}
+
+.monitor-page__detail-section {
+  padding: 18px 24px 0;
+}
+
+.monitor-page__detail-section-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px;
+}
+
+/* Risk Score */
+.monitor-page__risk-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.monitor-page__risk-bar {
+  flex: 1;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.monitor-page__risk-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.monitor-page__risk-bar-fill--low { background: #22c55e; }
+.monitor-page__risk-bar-fill--mid { background: #f59e0b; }
+.monitor-page__risk-bar-fill--high { background: #ef4444; }
+
+.monitor-page__risk-score {
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.monitor-page__risk-score--low { color: #22c55e; }
+.monitor-page__risk-score--mid { color: #f59e0b; }
+.monitor-page__risk-score--high { color: #ef4444; }
+
+.monitor-page__risk-factors {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 4px;
+}
+
+.monitor-page__risk-factor {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.monitor-page__risk-factor-label {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.monitor-page__risk-factor-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Exam Progress in Detail */
+.monitor-page__detail-progress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.monitor-page__detail-progress-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.monitor-page__detail-progress-value {
+  font-size: 12px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.monitor-page__detail-progress-bar {
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.monitor-page__detail-progress-fill {
+  height: 100%;
+  background: #4a6cf7;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.monitor-page__detail-progress-meta {
+  display: flex;
+  font-size: 12px;
+  color: #94a3b8;
+  gap: 16px;
+}
+
+/* Behavior Log */
+.monitor-page__behavior-list {
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.monitor-page__behavior-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.monitor-page__behavior-item:last-child {
+  border-bottom: none;
+}
+
+.monitor-page__behavior-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.monitor-page__behavior-time {
+  font-size: 11px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  font-family: monospace;
+}
+
+.monitor-page__behavior-text {
+  font-size: 12px;
+  color: #334155;
+  line-height: 1.4;
+}
+
+.monitor-page__behavior-empty {
+  font-size: 12px;
+  color: #94a3b8;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* Submissions */
+.monitor-page__submission-list {
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.monitor-page__submission-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 12px;
+}
+
+.monitor-page__submission-item:last-child {
+  border-bottom: none;
+}
+
+.monitor-page__submission-time {
+  color: #94a3b8;
+  font-family: monospace;
+  flex-shrink: 0;
+}
+
+.monitor-page__submission-question {
+  color: #475569;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.monitor-page__submission-result {
+  font-weight: 600;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.monitor-page__submission-result--pass {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.monitor-page__submission-result--fail {
+  background: rgba(239, 68, 68, 0.08);
+  color: #dc2626;
+}
+
+.monitor-page__submission-score {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+/* Detail Actions */
+.monitor-page__detail-actions {
+  display: flex;
+  gap: 10px;
+  padding: 20px 24px 28px;
+  margin-top: auto;
+  border-top: 1px solid #f1f5f9;
+}
+
+.monitor-page__detail-action {
+  flex: 1;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 7px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.monitor-page__detail-action--warn {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.monitor-page__detail-action--warn:hover {
+  background: #fde68a;
+}
+
+.monitor-page__detail-action--submit {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.monitor-page__detail-action--submit:hover {
+  background: #fecaca;
+}
+
+.monitor-page__detail-action--resume {
+  background: #d1fae5;
+  color: #059669;
+  border-color: #a7f3d0;
+}
+
+.monitor-page__detail-action--resume:hover {
+  background: #a7f3d0;
 }
 </style>

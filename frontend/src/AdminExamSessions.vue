@@ -104,6 +104,64 @@
         </div>
       </div>
 
+      <!-- Exam Detail Modal -->
+      <div v-if="detailTarget" class="exams-page__overlay" @click.self="detailTarget = null">
+        <div class="exams-page__detail-modal">
+          <div class="exams-page__detail-header">
+            <h2 class="exams-page__detail-title">{{ detailTarget.name }}</h2>
+            <button class="exams-page__detail-close" @click="detailTarget = null">&times;</button>
+          </div>
+          <div class="exams-page__detail-body">
+            <div class="exams-page__detail-grid">
+              <div class="exams-page__detail-item">
+                <span class="exams-page__detail-label">考试 ID</span>
+                <span class="exams-page__detail-value exams-page__detail-value--mono">{{ detailTarget.id }}</span>
+              </div>
+              <div class="exams-page__detail-item">
+                <span class="exams-page__detail-label">状态</span>
+                <StatusBadge :label="statusLabel(detailTarget.status)" :variant="statusVariant(detailTarget.status)" />
+              </div>
+              <div class="exams-page__detail-item">
+                <span class="exams-page__detail-label">题目数量</span>
+                <span class="exams-page__detail-value">{{ detailTarget.questions }} 题</span>
+              </div>
+              <div class="exams-page__detail-item">
+                <span class="exams-page__detail-label">通过率</span>
+                <span
+                  class="exams-page__detail-value exams-page__detail-value--passrate"
+                  :class="{
+                    'exams-page__table-passrate--high': detailTarget.passRate >= 70,
+                    'exams-page__table-passrate--mid': detailTarget.passRate >= 40 && detailTarget.passRate < 70,
+                    'exams-page__table-passrate--low': detailTarget.passRate < 40,
+                  }"
+                >
+                  {{ detailTarget.passRate }}%
+                </span>
+              </div>
+              <div class="exams-page__detail-item">
+                <span class="exams-page__detail-label">开始时间</span>
+                <span class="exams-page__detail-value">{{ detailTarget.start }}</span>
+              </div>
+              <div class="exams-page__detail-item">
+                <span class="exams-page__detail-label">结束时间</span>
+                <span class="exams-page__detail-value">{{ detailTarget.end }}</span>
+              </div>
+              <div class="exams-page__detail-item">
+                <span class="exams-page__detail-label">已参与人数</span>
+                <span class="exams-page__detail-value">{{ detailTarget.participants?.current ?? 0 }} 人</span>
+              </div>
+              <div class="exams-page__detail-item">
+                <span class="exams-page__detail-label">总名额</span>
+                <span class="exams-page__detail-value">{{ detailTarget.participants?.total ?? 0 }} 人</span>
+              </div>
+            </div>
+          </div>
+          <div class="exams-page__detail-footer">
+            <button class="exams-page__detail-btn" @click="detailTarget = null">关闭</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Create Exam Modal -->
       <div v-if="showCreateModal" class="exams-page__overlay" @click.self="showCreateModal = false">
         <div class="exams-page__modal">
@@ -295,8 +353,10 @@ function handleEdit(exam) {
   showCreateModal.value = true
 }
 
+const detailTarget = ref(null)
+
 function handleDetail(exam) {
-  alert(`查看考试详情: ${exam.name}\nID: ${exam.id}\n状态: ${statusLabel(exam.status)}\n通过率: ${exam.passRate}%`)
+  detailTarget.value = exam
 }
 
 function confirmDelete(exam) {
@@ -830,5 +890,106 @@ onMounted(() => {
 
 .exams-page__modal-publish:hover {
   opacity: 0.92;
+}
+
+/* Detail Modal */
+.exams-page__detail-modal {
+  background: #fff;
+  border-radius: 14px;
+  width: 520px;
+  max-width: 90vw;
+  overflow: hidden;
+}
+
+.exams-page__detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px 0;
+}
+
+.exams-page__detail-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.exams-page__detail-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.exams-page__detail-close:hover {
+  color: #475569;
+}
+
+.exams-page__detail-body {
+  padding: 20px 28px;
+}
+
+.exams-page__detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.exams-page__detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.exams-page__detail-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.exams-page__detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.exams-page__detail-value--mono {
+  font-family: Consolas, Monaco, monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.exams-page__detail-value--passrate {
+  font-size: 16px;
+}
+
+.exams-page__detail-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 28px 24px;
+}
+
+.exams-page__detail-btn {
+  background: #4a6cf7;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 9px 24px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.exams-page__detail-btn:hover {
+  opacity: 0.9;
 }
 </style>

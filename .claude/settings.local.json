@@ -57,7 +57,11 @@
       "Bash(docker run:*)",
       "Bash(find \"D:\\\\code\\\\skills-demo\\\\backend\" -type d -name \"__pycache__\" -exec rm -rf {} +)",
       "Bash(taskkill /F /IM node.exe)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(.venv/Scripts/python.exe -c \"from main import app; print\\(''OK''\\)\")",
+      "Bash(node -e \"try { require\\(''./src/data/mockData.js''\\); console.log\\(''OK''\\); } catch\\(e\\) { console.error\\(e.message\\); }\")",
+      "Bash(node --check src/data/mockData.js)"
     ]
   }
 }

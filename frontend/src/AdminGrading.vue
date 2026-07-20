@@ -2,9 +2,13 @@
   <AdminLayout activeRoute="grading">
     <div class="grading-page">
       <!-- No exam ID -->
-      <div v-if="!examId" class="grading-page__no-exam">
-        <p>请从考试管理页面选择一个已结束的考试查看成绩。</p>
+      <div v-if="!effectiveExamId && !autoDetecting" class="grading-page__no-exam">
+        <p>当前没有已结束的考试场次。</p>
         <router-link to="/admin/exams" class="grading-page__back-link">前往考试管理</router-link>
+      </div>
+      <div v-else-if="autoDetecting" class="grading-page__loading">
+        <div class="grading-page__loading-spinner"></div>
+        <span>正在查找已结束的考试...</span>
       </div>
 
       <template v-else>
@@ -282,10 +286,13 @@ import StatCard from './components/StatCard.vue'
 import StatusBadge from './components/StatusBadge.vue'
 import ScoreBar from './components/ScoreBar.vue'
 import CodeBlock from './components/CodeBlock.vue'
-import { fetchGradingData } from './data/api.js'
+import { fetchGradingData, fetchExamSessions } from './data/api.js'
 
 const route = useRoute()
-const examId = computed(() => route.params.examId)
+const routeExamId = computed(() => route.params.examId)
+const detectedExamId = ref(null)
+const autoDetecting = ref(false)
+const effectiveExamId = computed(() => routeExamId.value || detectedExamId.value)
 const examName = ref('')
 const loading = ref(true)
 const activeTab = ref('overview')
@@ -380,7 +387,7 @@ function generateQuestionAnalysis() {
 async function loadData() {
   loading.value = true
   try {
-    const id = examId.value
+    const id = effectiveExamId.value
     if (!id) return
 
     const result = await fetchGradingData(id)
@@ -477,7 +484,26 @@ async function loadData() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // If no examId in route, auto-detect the most recent ended exam
+  if (!routeExamId.value) {
+    autoDetecting.value = true
+    try {
+      const sessions = await fetchExamSessions()
+      // Prefer ended exams, fallback to active
+      const ended = (sessions || []).filter(s => s.status === 'ended')
+      if (ended.length > 0) {
+        detectedExamId.value = ended[0].id
+      } else {
+        const active = (sessions || []).find(s => s.status === 'active')
+        if (active) detectedExamId.value = active.id
+      }
+    } catch (e) {
+      console.error('Failed to auto-detect exam:', e)
+    } finally {
+      autoDetecting.value = false
+    }
+  }
   loadData()
 })
 </script>

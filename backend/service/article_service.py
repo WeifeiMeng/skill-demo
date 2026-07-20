@@ -7,6 +7,7 @@ NAME_MAP = {
     "deep-face-search": "深度人脸搜索",
     "advanced-short-url": "高性能短链接",
     "vibe-coding-challenge": "Vibe Coding: 新品冷启动流量配额系统",
+    "logistics-delivery": "同城末端配送路径规划",
 }
 
 

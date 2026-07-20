@@ -1,0 +1,5 @@
+{
+  "test_command": "python test.py",
+  "max_score": 100,
+  "cases": []
+}

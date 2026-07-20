@@ -57,7 +57,7 @@ onMounted(load)
 </script>
 
 <style scoped>
-.article-list { max-width: 960px; }
+.article-list { }
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .page-title { font-size: 22px; font-weight: 700; color: #0f172a; }
 .btn-primary {

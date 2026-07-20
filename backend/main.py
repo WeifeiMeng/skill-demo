@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from middleware.database import get_db
 from route import auth, article, docker_container, exam, admin
+from route.article import challenges_router
 
 app = FastAPI()
 
@@ -19,6 +20,7 @@ app.add_middleware(
 # 注册路由
 app.include_router(auth.router)
 app.include_router(article.router)
+app.include_router(challenges_router)
 app.include_router(docker_container.router)
 app.include_router(exam.router)
 app.include_router(admin.router)

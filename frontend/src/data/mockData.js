@@ -42,6 +42,17 @@ export function getChallenges() {
       description: '基于 ODPS 平台的运筹优化问题，需要设计高效的分配算法处理大规模资源约束，考察数学建模与工程实现能力。'
     },
     {
+      filename: 'logistics-delivery',
+      title: '同城末端配送路径规划',
+      icon: '🚚',
+      difficulty: 'hard',
+      tags: ['算法', '运筹'],
+      passRate: 38,
+      attemptCount: 42,
+      status: 'new',
+      description: '为物流公司设计车辆路径规划算法，在容量和车辆数约束下最小化总行驶距离，包含数据校验与大规模基准测试。'
+    },
+    {
       filename: 'lru-cache',
       title: 'LRU 缓存设计',
       icon: '🗂️',
@@ -73,6 +84,83 @@ export function getChallenges() {
       attemptCount: 45,
       status: 'attempted',
       description: '用 Go 语言基于 Redis 实现一个可靠的分布式锁，需要处理锁续约、Redlock 算法、以及网络分区场景下的安全性保障。'
+    },
+    {
+      filename: 'log-aggregator',
+      title: '日志聚合分析系统',
+      icon: '📋',
+      difficulty: 'medium',
+      tags: ['Elasticsearch', '数据处理'],
+      passRate: 61,
+      attemptCount: 112,
+      status: 'new',
+      description: '设计一个多数据源日志聚合管道，支持实时采集、结构化清洗、聚合查询和异常告警规则配置。'
+    },
+    {
+      filename: 'ab-test-framework',
+      title: 'A/B 测试平台设计',
+      icon: '🧪',
+      difficulty: 'medium',
+      tags: ['统计学', '后端架构'],
+      passRate: 55,
+      attemptCount: 78,
+      status: 'attempted',
+      description: '构建一个分层分桶的 A/B 实验平台，包含流量分配、指标计算、置信度检验和实验报告自动生成。'
+    },
+    {
+      filename: 'sentiment-analysis',
+      title: '电商评论情感分析',
+      icon: '💬',
+      difficulty: 'easy',
+      tags: ['NLP', 'Python'],
+      passRate: 79,
+      attemptCount: 203,
+      status: 'solved',
+      description: '基于 BERT 微调的电商评论情感分类任务，完成数据清洗、模型训练、推理部署全流程。'
+    },
+    {
+      filename: 'rate-limiter',
+      title: 'API 限流器设计',
+      icon: '🚦',
+      difficulty: 'easy',
+      tags: ['系统设计', 'Python'],
+      passRate: 82,
+      attemptCount: 178,
+      status: 'solved',
+      description: '实现令牌桶和滑动窗口两种限流算法，支持分布式环境下的全局限流与单机限流切换。'
+    },
+    {
+      filename: 'sql-optimizer',
+      title: '慢 SQL 诊断与优化',
+      icon: '🐢',
+      difficulty: 'medium',
+      tags: ['MySQL', '性能优化'],
+      passRate: 57,
+      attemptCount: 95,
+      status: 'new',
+      description: '给定一组业务查询和表结构，诊断性能瓶颈并给出索引优化、SQL 改写和分表方案。'
+    },
+    {
+      filename: 'scheduler-engine',
+      title: '分布式任务调度引擎',
+      icon: '⏰',
+      difficulty: 'hard',
+      tags: ['Go', '分布式'],
+      passRate: 32,
+      attemptCount: 53,
+      status: 'new',
+      description: '设计一个支持 Cron 表达式、任务依赖 DAG、失败重试和分片执行的分布式任务调度系统。'
+    },
+    {
+      filename: 'dash-report',
+      title: '自动化数据报告生成',
+      icon: '📈',
+      difficulty: 'easy',
+      tags: ['Python', '自动化'],
+      passRate: 76,
+      attemptCount: 134,
+      status: 'attempted',
+      description: '从数据库中提取业务指标，用 AI 自动生成包含图表、文字分析和建议的 PDF 数据报告。'
     }
   ]
 }
@@ -101,6 +189,12 @@ export function getUserProfile() {
 // ---------------------------------------------------------------------------
 export function getUserActivities() {
   return [
+    {
+      type: 'start',
+      title: '开始挑战 同城末端配送路径规划',
+      time: '2026-06-24 10:30',
+      result: ''
+    },
     {
       type: 'pass',
       title: '通过了 Deep Face Search',
@@ -244,6 +338,238 @@ export function getScoreReport(filename) {
       },
       submittedAt: '2026-06-15 11:00',
       submitCount: 1
+    },
+    'advanced-short-url': {
+      totalScore: 78,
+      maxScore: 100,
+      grade: 'B',
+      resultScore: 47,
+      resultMax: 60,
+      passed: true,
+      processScores: [
+        { icon: '📝', label: '需求分析', score: 16, max: 20 },
+        { icon: '🏗️', label: '架构设计', score: 18, max: 20 },
+        { icon: '💻', label: '代码实现', score: 30, max: 40 },
+        { icon: '✅', label: '测试覆盖', score: 14, max: 20 }
+      ],
+      testCases: [
+        { name: '短链接生成与解析', passed: true, message: '通过' },
+        { name: '高并发写入压测', passed: true, message: '通过' },
+        { name: '缓存命中率', passed: false, message: '缓存命中率 72%，未达 90% 目标' },
+        { name: '分布式 ID 唯一性', passed: true, message: '通过' }
+      ],
+      code: `class ShortURLService:
+    def __init__(self):
+        self.url_map = {}
+        self.counter = 0
+        self.base62 = string.digits + string.ascii_letters
+
+    def encode(self, long_url: str) -> str:
+        self.counter += 1
+        short = self._to_base62(self.counter)
+        self.url_map[short] = long_url
+        return short`,
+      stats: {
+        timeUsed: '68 分钟',
+        aiRounds: 18,
+        tokens: 10240,
+        tokensIn: 5120,
+        tokensOut: 5120,
+        model: 'Claude-4.5-Opus',
+        tabSwitches: 8
+      },
+      submittedAt: '2026-06-18 15:20',
+      submitCount: 2
+    },
+    'vibe-coding-challenge': {
+      totalScore: 55,
+      maxScore: 100,
+      grade: 'C',
+      resultScore: 33,
+      resultMax: 60,
+      passed: false,
+      processScores: [
+        { icon: '📝', label: '需求分析', score: 12, max: 20 },
+        { icon: '🏗️', label: '架构设计', score: 14, max: 20 },
+        { icon: '💻', label: '代码实现', score: 20, max: 40 },
+        { icon: '✅', label: '测试覆盖', score: 9, max: 20 }
+      ],
+      testCases: [
+        { name: '基础流量分配', passed: true, message: '通过' },
+        { name: '多约束优化', passed: false, message: '违反预算约束，超支 15%' },
+        { name: '大规模数据性能', passed: false, message: '100万行数据 OOM' },
+        { name: '冷启动策略', passed: true, message: '通过' }
+      ],
+      code: `def allocate_traffic(budget, channels, constraints):
+    # 贪心分配策略
+    remaining = budget
+    plan = {}
+    for ch in sorted(channels, key=lambda x: -x['roi']):
+        alloc = min(ch['max'], remaining)
+        plan[ch['id']] = alloc
+        remaining -= alloc
+    return plan`,
+      stats: {
+        timeUsed: '95 分钟',
+        aiRounds: 22,
+        tokens: 15680,
+        tokensIn: 7800,
+        tokensOut: 7880,
+        model: 'Claude-4.5-Opus',
+        tabSwitches: 11
+      },
+      submittedAt: '2026-06-20 09:15',
+      submitCount: 1
+    },
+    'logistics-delivery': {
+      totalScore: 65,
+      maxScore: 100,
+      grade: 'C',
+      resultScore: 39,
+      resultMax: 60,
+      passed: true,
+      processScores: [
+        { icon: '📝', label: '需求分析', score: 15, max: 20 },
+        { icon: '🏗️', label: '算法设计', score: 16, max: 20 },
+        { icon: '💻', label: '代码实现', score: 22, max: 40 },
+        { icon: '✅', label: '测试覆盖', score: 12, max: 20 }
+      ],
+      testCases: [
+        { name: '基础可行场景', passed: true, message: '通过' },
+        { name: '容量边界', passed: true, message: '通过' },
+        { name: '负重量异常数据', passed: false, message: '未检测到 c1 重量为负数' },
+        { name: '车辆不足', passed: true, message: '正确返回无解' },
+        { name: '往返距离完整性', passed: true, message: '通过' },
+        { name: '单点超载', passed: true, message: '正确返回无解' },
+        { name: '同位置客户分组', passed: false, message: 'c3/c4 被拆分到不同车辆' },
+        { name: '空客户列表', passed: true, message: '通过' },
+        { name: '客户ID重复', passed: true, message: '通过' },
+        { name: '坐标轴缺失', passed: true, message: '正确拒绝求解' },
+        { name: 'Solomon R101 (100客户)', passed: false, message: '总距离 1056 > 900 上限' }
+      ],
+      code: `def plan_routes(depot, customers, vehicle_capacity, max_vehicles):
+    # 最近邻贪心 + 容量约束
+    valid = [c for c in customers if len(c['coord']) == 2 and c['weight'] > 0]
+    if any(c['weight'] > vehicle_capacity for c in valid):
+        return {"routes": [], "total_distance": -1.0, "num_vehicles": -1, "message": "无解"}
+
+    routes = []
+    visited = set()
+    for _ in range(max_vehicles):
+        route, load = [], 0
+        curr = depot
+        while True:
+            best, best_dist = None, float('inf')
+            for i, c in enumerate(valid):
+                if i in visited: continue
+                if load + c['weight'] > vehicle_capacity: continue
+                d = ((curr[0]-c['coord'][0])**2 + (curr[1]-c['coord'][1])**2) ** 0.5
+                if d < best_dist:
+                    best, best_dist = i, d
+            if best is None: break
+            route.append(f"{valid[best]['id']}({valid[best]['coord'][0]},{valid[best]['coord'][1]})")
+            load += valid[best]['weight']
+            curr = valid[best]['coord']
+            visited.add(best)
+        if route: routes.append(route)
+        if len(visited) == len(valid): break
+    return {"routes": routes, "total_distance": 0.0, "num_vehicles": len(routes), "message": "求解成功"} if len(visited) == len(valid) else {"routes": [], "total_distance": -1.0, "num_vehicles": -1, "message": "无解"}`,
+      stats: {
+        timeUsed: '110 分钟',
+        aiRounds: 28,
+        tokens: 19200,
+        tokensIn: 9600,
+        tokensOut: 9600,
+        model: 'Claude-4.5-Opus',
+        tabSwitches: 15
+      },
+      submittedAt: '2026-06-25 16:40',
+      submitCount: 2
+    },
+    'realtime-stream': {
+      totalScore: 42,
+      maxScore: 100,
+      grade: 'D',
+      resultScore: 25,
+      resultMax: 60,
+      passed: false,
+      processScores: [
+        { icon: '📝', label: '需求分析', score: 10, max: 20 },
+        { icon: '🏗️', label: '架构设计', score: 12, max: 20 },
+        { icon: '💻', label: '代码实现', score: 14, max: 40 },
+        { icon: '✅', label: '测试覆盖', score: 6, max: 20 }
+      ],
+      testCases: [
+        { name: '基础流处理', passed: true, message: '通过' },
+        { name: 'Exactly-Once 语义', passed: false, message: '存在重复消费' },
+        { name: '背压处理', passed: false, message: '高流量下消费者宕机' },
+        { name: '分区重平衡', passed: true, message: '通过' }
+      ],
+      code: `class StreamProcessor:
+    def __init__(self, brokers, topic):
+        self.consumer = KafkaConsumer(topic, bootstrap_servers=brokers)
+        self.offset_map = {}
+
+    def process(self, handler):
+        for msg in self.consumer:
+            handler(msg.value)
+            self.consumer.commit()`,
+      stats: {
+        timeUsed: '52 分钟',
+        aiRounds: 10,
+        tokens: 5400,
+        tokensIn: 2700,
+        tokensOut: 2700,
+        model: 'Claude-4.5-Opus',
+        tabSwitches: 3
+      },
+      submittedAt: '2026-06-14 10:30',
+      submitCount: 1
+    },
+    'distributed-lock': {
+      totalScore: 48,
+      maxScore: 100,
+      grade: 'D',
+      resultScore: 29,
+      resultMax: 60,
+      passed: false,
+      processScores: [
+        { icon: '📝', label: '需求分析', score: 14, max: 20 },
+        { icon: '🏗️', label: '架构设计', score: 13, max: 20 },
+        { icon: '💻', label: '代码实现', score: 14, max: 40 },
+        { icon: '✅', label: '测试覆盖', score: 7, max: 20 }
+      ],
+      testCases: [
+        { name: 'SET NX 基本加锁', passed: true, message: '通过' },
+        { name: '锁过期自动释放', passed: true, message: '通过' },
+        { name: 'Redlock 多节点', passed: false, message: '网络分区场景锁安全性失败' },
+        { name: '锁续约 Watchdog', passed: false, message: '未实现自动续期' }
+      ],
+      code: `type RedisLock struct {
+    client *redis.Client
+    key    string
+    value  string
+    ttl    time.Duration
+}
+
+func (l *RedisLock) Lock(ctx context.Context) error {
+    ok, err := l.client.SetNX(ctx, l.key, l.value, l.ttl).Result()
+    if err != nil || !ok {
+        return fmt.Errorf("failed to acquire lock")
+    }
+    return nil
+}`,
+      stats: {
+        timeUsed: '78 分钟',
+        aiRounds: 16,
+        tokens: 8500,
+        tokensIn: 4200,
+        tokensOut: 4300,
+        model: 'Claude-4.5-Opus',
+        tabSwitches: 6
+      },
+      submittedAt: '2026-06-18 16:40',
+      submitCount: 3
     }
   }
 
@@ -501,6 +827,115 @@ func randomValue() string {
           '时钟漂移（clock drift）是 Redlock 最大的安全隐患——如果某个节点的时钟出现大幅度跳跃，锁安全性会受影响。',
           '网络分区可能导致脑裂：若客户端 A 与多数节点网络正常，但客户端 B 仅与少数节点通信，两个客户端可能同时认为自己持锁。',
           '锁续约（watchdog）是可选但推荐的增强：对于长时间任务，应在后台自动续期锁，避免任务未完成锁已过期。'
+        ]
+      }
+    },
+    {
+      id: 'sol-004',
+      problem: 'logistics-delivery',
+      problemIcon: '🚚',
+      difficulty: 'hard',
+      title: '车辆路径规划（VRP）：从贪心到启发式算法',
+      summary: '同城配送路径规划是经典的 CVRP 问题。本文从最近邻贪心出发，逐步引入 Clark-Wright Savings 算法和 2-opt 局部搜索，并讨论数据校验与边界情况处理。',
+      featured: false,
+      author: {
+        name: '王五',
+        avatar: ''
+      },
+      time: '2026-06-26',
+      likes: 72,
+      stars: 18,
+      comments: 9,
+      tags: ['算法', '运筹', 'VRP', 'Python'],
+      codePreview: `def plan_routes(depot, customers, vehicle_capacity, max_vehicles):
+    # 数据校验 + savings 算法
+    valid = validate(customers)
+    if not valid: return no_solution()
+    return savings_algorithm(depot, valid, vehicle_capacity, max_vehicles)`,
+      fullContent: {
+        approach: 'CVRP 的核心是在满足容量约束的前提下，用最少/最短的路径服务所有客户。解题分三步：(1) 数据校验——过滤坐标不完整、重量为负数的异常客户，检测单点超载和车辆不足等无解场景；(2) 初始解——使用 Clark-Wright Savings 算法，计算合并两条路径可节省的距离，按节省量降序合并，同时检查容量约束；(3) 局部优化——对每条路径做 2-opt 边交换，消除交叉路径。对于 100 客户的 Solomon 基准，Savings+2-opt 可在 1 秒内得到总距离约 750 的解，优于 900 的验收线。',
+        fullCode: `import math
+
+def distance(a, b):
+    return math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)
+
+def validate(customers):
+    valid = []
+    for c in customers:
+        coord = c.get('coord', [])
+        if len(coord) != 2:
+            continue
+        if c.get('weight', 0) < 0:
+            continue
+        valid.append(c)
+    return valid
+
+def plan_routes(depot, customers, vehicle_capacity, max_vehicles):
+    valid = validate(customers)
+    if not customers:
+        return {"routes": [], "total_distance": 0.0, "num_vehicles": 0, "message": "无客户"}
+    if not valid:
+        return {"routes": [], "total_distance": -1.0, "num_vehicles": -1, "message": "无有效客户"}
+    if any(c['weight'] > vehicle_capacity for c in valid):
+        return {"routes": [], "total_distance": -1.0, "num_vehicles": -1, "message": "单点超载"}
+
+    savings = []
+    for i in range(len(valid)):
+        for j in range(i+1, len(valid)):
+            s = (distance(depot, valid[i]['coord']) + distance(depot, valid[j]['coord'])
+                 - distance(valid[i]['coord'], valid[j]['coord']))
+            savings.append((s, i, j))
+    savings.sort(key=lambda x: -x[0])
+
+    routes = [[i] for i in range(len(valid))]
+    loads = [valid[i]['weight'] for i in range(len(valid))]
+
+    for s, i, j in savings:
+        ri = next((k for k, r in enumerate(routes) if i in r), -1)
+        rj = next((k for k, r in enumerate(routes) if j in r), -1)
+        if ri == -1 or rj == -1 or ri == rj:
+            continue
+        if loads[ri] + loads[rj] > vehicle_capacity:
+            continue
+        merged = routes[ri] + routes[rj] if routes[ri][-1] == i and routes[rj][0] == j else None
+        if merged is None:
+            merged = routes[ri] + list(reversed(routes[rj])) if routes[ri][-1] == i and routes[rj][-1] == j else None
+        if merged is None:
+            continue
+        routes[ri] = merged
+        loads[ri] += loads[rj]
+        routes.pop(rj)
+        loads.pop(rj)
+
+    if len(routes) > max_vehicles:
+        return {"routes": [], "total_distance": -1.0, "num_vehicles": -1, "message": "车辆不足"}
+
+    result_routes = []
+    total_dist = 0.0
+    for r in routes:
+        path = []
+        prev = depot
+        for idx in r:
+            c = valid[idx]
+            path.append(f"{c['id']}({c['coord'][0]},{c['coord'][1]})")
+            total_dist += distance(prev, c['coord'])
+            prev = c['coord']
+        total_dist += distance(prev, depot)
+        result_routes.append(path)
+
+    return {
+        "routes": result_routes,
+        "total_distance": round(total_dist, 3),
+        "num_vehicles": len(routes),
+        "message": f"求解成功，{len(routes)}辆车服务{len(valid)}个客户"
+    }`,
+        timeComplexity: 'O(n² log n)，n 为客户数，Savings 排序主导',
+        spaceComplexity: 'O(n²)，存储 savings 列表',
+        pitfalls: [
+          '贪心合并可能违反容量约束——每次合并前必须检查 load[i] + load[j] <= capacity。',
+          'Savings 合并时节点必须在路径端点，否则合并会导致子路径断裂。',
+          '数据校验不应返回部分解——单点超载必须返回无解标识而非跳过该客户。',
+          '100 客户的大规模场景下，纯贪心的总距离约 1000-1200，加 2-opt 局部搜索可降至 750-850。'
         ]
       }
     }

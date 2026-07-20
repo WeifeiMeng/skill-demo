@@ -56,7 +56,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.student-list { max-width: 960px; }
+.student-list { }
 .page-title { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 24px; }
 .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
 .card { background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; overflow: hidden; }

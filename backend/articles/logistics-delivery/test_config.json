@@ -1,0 +1,17 @@
+{
+  "test_command": "python test.py",
+  "max_score": 100,
+  "cases": [
+    {"name": "基础可行场景", "score": 10, "description": "3个客户，1辆车即可完成"},
+    {"name": "容量边界", "score": 10, "description": "容量限制迫使拆分到3辆车"},
+    {"name": "负重量异常数据", "score": 5, "description": "检测并拒绝/跳过负重量客户"},
+    {"name": "车辆不足", "score": 10, "description": "max_vehicles不够，正确返回无解"},
+    {"name": "往返距离完整性", "score": 10, "description": "验证总距离计算包含depot往返"},
+    {"name": "单点超载", "score": 10, "description": "单个客户超过容量，正确返回无解"},
+    {"name": "同位置客户分组", "score": 10, "description": "零距离客户处理+同位置分组优化"},
+    {"name": "空客户列表", "score": 5, "description": "退化输入处理"},
+    {"name": "客户ID重复", "score": 5, "description": "重复ID处理，按坐标服务或报错"},
+    {"name": "坐标轴缺失", "score": 5, "description": "不完整坐标检测"},
+    {"name": "Solomon R101 100客户", "score": 20, "description": "大规模基准测试，总距离≤900"}
+  ]
+}
